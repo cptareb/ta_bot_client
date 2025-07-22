@@ -12,7 +12,6 @@ try {
     console.error("Failed to parse context cookie:", e);
     context = [];
 }
-let currentMode = 'chat';
 
 
 async function displayMessageOutput(message, role, feedbackAdded = false) {
@@ -333,74 +332,6 @@ function setPhoto() {
   
 }
 
-
-function catSpeak(){
-   const catSpeakDictionary = {
-       human: "hooman",
-       perfect: "purrfect",
-       hello: "meowllo",
-       you: "mew",
-       please: "pawlease",
-       thanks: "furry much",
-       sorry: "sowwy",
-       food: "noms",
-       water: "hydration station",
-       sleep: "slep",
-       love: "luv",
-       friend: "furiend",
-       beautiful: "meowgnificent",
-       wonderful: "pawsome",
-       awesome: "clawsome",
-       excited: "expurrted",
-       absolutely: "absomewtely",
-       definitely: "defurnitely",
-       morning: "meowning",
-       night: "nighty night",
-       snack: "snacc",
-       thick: "thicc",
-       attack: "attacc",
-       back: "bacc",
-       small: "smol",
-       little: "lil",
-       kitten: "smol bean",
-       cat: "kitteh",
-       the: "da",
-       my: "mah",
-       "give me": "gib me",
-       angry: "angy",
-       what: "wat",
-       okay: "okie",
-       because: "cuz",
-       just: "jus",
-       computer: "meowchine",
-       catnip: "nip nip",
-       treat: "treato",
-       belly: "tummy",
-       paw: "beans",
-       yes: "yesh",
-       no: "noes",
-       bird: "borb",
-       fish: "fishy",
-       dog: "woof beast",
-       mouse: "squeak toy",
-       deep: "dep",
-       keep: "kep",
-       sheep: "shep",
-       weep: "wep",
-       lick: "mlem",
-       "touch gently": "boop",
-       teeth: "teefies",
-       feet: "feetsies",
-       sit: "loaf",
-       knead: "make biscuits",
-       purr: "prrrrr",
-       meow: "mrow",
-       tail: "floof noodle",
-       ears: "ear floofs",
-       whiskers: "whisker fireworks"
-     };
-}
-
 function submitUsername(){
     const newUsername = document.getElementById('usernameInput').value.trim();
     const existingUsername = document.getElementById('existingUserInput').value.trim();
@@ -509,11 +440,8 @@ function hideUploadPopup() {
     document.getElementById('uploadPopup').style.display = 'none';
 }
 
-function onUploadDocument(event){
+async function onUploadDocument(event){
 
-    // event.preventDefault();
-
-  
     // Get the file input element
     const fileInput = document.getElementById('pdfInput');
     // Get the selected file
@@ -526,70 +454,65 @@ function onUploadDocument(event){
     // Create a FormData object to send the file
     const formData = new FormData();
     formData.append('pdf', file);
-    // Send the file to the server
-    for (const [key, value] of formData.entries()) {
-        console.log(key, value);
-      }
+
     const settings = {
         method: 'POST',
         body: formData,
         headers: {
             'Accept': 'application/json',
-            // 'Content-Type': "application/pdf"
         }
     };
-    // try {
-        console.log('Trying...');
-        const response = fetch('http://127.0.0.1:5000/tabot/upload_pdf', settings).then(response => response.json()).then(result => console.log(result));
-        // .then(result => {
-            // alert(result);
-            // console.log("Status:", response.status);
-            // if (!response.ok) throw new Error("bad server response");
-        
-            // const result = await response.json();
-            // console.log("[DEBUG] Result", result);
-        
-            // const flashcardContainer = document.getElementById('flashcards');
-            // flashcardContainer.innerHTML = '';
-        
-            // result.flashcards.forEach(pair => {
-            //   for (const [question, answer] of Object.entries(pair)) {
-            //     const card = document.createElement('div');
-            //     card.className = 'flashcard';
-            //     card.innerHTML = `
-            //     <div class="flashcard-content">
-            //         <div class="question"><strong>Q:</strong> ${question}</div>
-            //         <div class="answer"><strong>A:</strong> ${answer}</div>
-            //     </div>
-            //     <hr>
-            //     `;
-            //     flashcardContainer.appendChild(card);
-            //   }
-            // });    
-        // });
-    
-    //   } catch (err) {
-    //     console.error('Error:', err instanceof Error ? err.message : err);
-    //     alert('Something went wrong generating flashcards.');
-    //   }
+    try {
+        const response = await fetch('http://127.0.0.1:5000/tabot/upload_pdf', settings);
+        flashcards.length = 0;
+        console.log('Purged flashcards');
+        const newCards = await response.json();
 
-    // // Get filename
-    // const filename = file.name;
-    // // alert(`File ${filename} uploaded successfully!`);
+        //Handling unexpected incoming data formats (i.e., nested arrays)
+        if (newCards.flashcards && Array.isArray(newCards.flashcards)) {
+            flashcards.push(...newCards.flashcards);
+        } else if (Array.isArray(newCards)) {
+            flashcards.push(...newCards);
+        } else {
+            console.error("Unexpected flashcard data format:", newCards);
+        }
+        
+        console.log("new cards", newCards);
 
-    // // Add to sidebar documentList
-    // const documentList = document.getElementById('documentList');
-    // const listItem = document.createElement('li');
-    // listItem.textContent = filename;
-    // listItem.className = 'document-item';
-    // listItem.onclick = () => {
-    //     document.getElementById('userInput').value = `Read ${filename}`;
-    //     // document.getElementById('sendBtn').click();
-    // };
-    // documentList.appendChild(listItem);
-    // // Clear the file input
-    // fileInput.value = '';
-    // // Hide the upload popup
-    // hideUploadPopup();
+        currentCardIndex = 0;
+        showFlashcard(currentCardIndex);
+
+
+    } catch (err) {
+        console.error(err);
+        alert("Something went wrong generating flashcards");
+    }
+        
+    // Get filename
+    const filename = file.name;
+
+    // Add to sidebar documentList
+    const documentList = document.getElementById('documentList');
+    const listItem = document.createElement('li');
+    listItem.textContent = filename;
+    listItem.className = 'document-item';
+
+    //What the sidebar documents do when clicked
+    listItem.onclick = () => {
+        if (document.getElementById('chatTab').classList.contains('selected-tab')){
+            document.getElementById('userInput').value = `Read ${filename}`;
+        }
+        else if (document.getElementById('learnTab').classList.contains('selected-tab')){
+            //flashcard generation logic
+            console.log('placeholder');
+        }
+        //Flashcard functionality here?
+        document.getElementById('flashcardDisplay');
+    };
+    documentList.appendChild(listItem);
+    // Clear the file input
+    fileInput.value = '';
+    // Hide the upload popup
+    hideUploadPopup();
 
 }

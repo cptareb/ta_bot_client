@@ -60,43 +60,7 @@
         </ul>
     </div>
   </div>
-	<!-- style="border-radius: 50%; margin: 10px;"/> -->
-    <!-- <div id="modeButtons">
-        <button id="taBtn" class="modeButton" onclick="switchMode('TA')">TA</button>
-        <button id="advisorBtn" class="modeButton" onclick="switchMode('Advisor')">Advisor</button>
-    </div> -->
-	<!-- <h1 class="matemasie-regular">Mister Cat GPTA</h1> -->
-    <!-- <p><i>Under development by <b>Emirhan Gencer</b> and <b>Jack Patterson</b> during Summer 2024, advised by Dr. Fahad Sultan.</i><br/><br/> -->
-    <!-- This is currently based on GPT-3.5 and trained on basic information about the Computer Science department at Furman and <a href="https://fahadsultan.com/csc272">CSC-272 course syllabus</a>.</p> -->
-    <!-- <p><u> Use and trust information at your own risk!</u> This is not ready for prime time, yet.</p> -->
-    <!-- <p><i>Every query costs us around 0.33 cents, so around $1 for 300 queries. Please use mindfully and do not spam.</i></p> -->
-    
-
-    <!-- <p id="Advisor_Questions">
-    <b>Sample Queries (Advisor)</b><br/>
-    <a href="#" class="query">I am a freshman at Furman and am interested in some Computer Science courses. What can I take in Fall that have no pre-requisites?</a><br/>
-    <a href="#" class="query">What are the graduation requirements for Computer Science?</a><br/>
-    <a href="#" class="query">What is the difference between Computer Science and IT degrees at Furman?</a><br/>
-    <a href="#" class="query">What will I learn in CSC-272? Does it involve a project? If so, how much of the course grade is it worth?</a><br/> 
-    <a href="#" class="query">Who started the data analytics minor at Furman?</a><br/>
-    </p>
-    
-    <p id="TA_Questions">
-    <b>Sample Queries (TA)</b><br/>
-    <a href="#" class="query">What is the difference between worldviews of a probabilist and statistician?</a><br/>
-    <a href="#" class="query">If I have an 85 in the course right now, what do I need on the final to get an A?</a><br/>
-    <a href="#" class="query">When is the final exam for this course?</a><br/>
-    <a href="#" class="query">When is the next assignment due?</a><br/>
-    <a href="#" class="query">What is the textbook for the course?</a><br/>
-    <a href="#" class="query">Isn't logistic regression actually classification? Why is it called regression then?</a><br/>
-    <a href="#" class="query">Can you give me the URL for Bayes Theorem ?</a><br/>
-    <a href="#" class="query">How do I read a CSV file in pandas?</a><br/>
-    <a href="#" class="query">Can you give me some ideas for the course project, each with a public dataset? I like Mexican food and Soccer.</a><br/>
-    <a href="#" class="query">Can you help me identify the problem with this line of code: `pd.read_csv["test.csv"]` without giving away the answer</a><br/>
-    <a href="#" class="query">There was a question on the test about Classification. I said classification is used for predicting continuous variables. Why is this wrong?</a><br/>
-	<a href="#" class="query">How do I use seaborn to visualize a dataset? Explain with both text and code.</a><br/>
-    </p> -->
-
+	
     <div id="chatContainer">
       <div id="chatTabs">
         <button id="chatTab"  class="tab selected-tab" onclick="switchTabs('chat')">Chat</button>
@@ -132,28 +96,27 @@
     </div>
     </div>
     </div>
-    <!-- <script>
-      window.addEventListener("DOMContentLoaded", initialize);
-  </script> -->
     </div>
   </div>
 </body>
 </html>
 
 <script>
-  const flashcards = [
-    { question: "a", answer: "b" },
-    { question: "c", answer: "d" },
-    { question: "e", answer: "f" }
-];
+  window.flashcards = [
+  { question: "a", answer: "b" },
+  { question: "c", answer: "d" }
+  ];
+  window.currentCardIndex = 0;
 
-let currentCardIndex = 0;
-
-function showFlashcard(index) {
+window.showFlashcard = function(index){
     const display = document.getElementById("flashcardDisplay");
     display.innerHTML = ''; // clear
 
+    // We need to access flashcard text from backend here
     const data = flashcards[index];
+    console.log('Rendering flashcard:', data);
+    console.log("flashcards length:", flashcards.length);
+    console.log("flashcards[0]:", flashcards[0]);
 
     const card = document.createElement("div");
     card.className = "flashcard";
