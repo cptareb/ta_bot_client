@@ -1,0 +1,387 @@
+
+#Advisor_Questions{
+    display: none;
+}
+body {
+    font-family: "Amatic SC", sans-serif;
+    margin: 0px;
+    padding: 0px;
+    background-color: #141313;
+}
+
+#grid-container{
+    display: grid;
+    grid-template-columns: 20% 80%;
+    font-size: 25px;
+    font-weight: 400;
+    background-color: #222;
+    color:#7CFC00;
+    margin: 0;
+    /* padding: 20px; */
+    height: 100vh;
+
+}
+
+#sidebar {
+    background: rgb(53, 53, 53);
+    border: 1px solid darkgray;
+
+}
+
+
+
+#chatContainer{
+    border: 1px solid darkgray;
+}
+
+#chatbox {
+    width: calc(100% - 75px);
+    margin: 20 auto;
+    /* background-color: 	#848884; */
+    background-color: 	#222;
+    /* border: 1px solid #ccc; */
+    border-radius: 5px;
+    padding: 20px;
+    /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); */
+    overflow-y: auto;
+    max-height: 800px;
+}
+
+.message {
+    margin-bottom: 10px;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.user {
+    background-color: #582c83;
+    margin-right: 15%;
+    margin-left: 15%;
+    padding-right: 9%;
+    /* width: 50%; */
+    /* clip-path: polygon(100% 0%, 0% 0%, 0% 100%, 0% 100%, 90% 100%, 90% 10%, 100% 0%); */
+    clip-path: url("#chatBubbleClipPathUser");
+    align-self: flex-end;
+    text-align: right;
+    /* border: 1px solid gray; */
+}
+
+.bot {
+    background-color: rgb(53, 53, 53);
+    align-self: flex-start;
+    width: 60%;
+
+    clip-path: url("#chatBubbleClipPathBot");
+
+    /* border: 1px solid gray; */
+    margin-left: 15%;
+    padding-left: 5%;
+    /* border-radius: 0% 10% 10% 10%; */
+}
+.urls {
+    background-color: #D8DA7D;
+    align-self: flex-start;
+}
+
+input[type="text"] {
+    width: calc(100% - 75px);
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid darkgray;
+    border-radius: 5px 0 0 5px;
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    background-color: #4caf50;
+    color: white;
+    border-radius: 0 5px 5px 0;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+.sending-message {
+    font-style: italic;
+    color: #888;
+    margin-top: 5px;
+}
+.thumbs {
+        margin-top: 5px;
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+    }
+
+.thumbs button {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+#modeButtons {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+}
+
+.modeButton {
+    padding: 10px 15px;
+    margin: 5px;
+    border: none;
+    background-color: #141313;
+    color: white;
+    cursor: pointer;
+}
+
+.modeButton.active {
+    background-color: #23C278;
+}
+    
+pre code {
+    display: block;
+    background-color: black;
+    padding: 10px;
+    font-size: 15px;
+    border: 1px solid #1C1B1A;
+    border-radius: 5px;
+    font-family: monospace;
+    overflow-x: auto;
+}
+
+.matemasie-regular {
+    font-family: "Matemasie", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+}
+
+
+#mister{
+    width: 15%;
+    height: 15%;
+    /* clip-path: polygon(0% 0%,  100% 0%, 100% 100%, 100% 100%, 10% 100%, 10% 10%, 0% 0%); */
+    border-radius: 50% 50% 50% 50%;
+    position: relative;
+    border: 5px solid gray;
+}
+
+#paladin {
+    width: 15%;
+    height: 15%;
+    /* border-radius: 50% 50% 50% 50%; */
+    position: relative;
+    padding-top: 20%;
+    /* border: 2px solid gray; */
+}
+
+.shape { border-radius: 5px 10px 15px 30px/30px 15px 10px 5px; }
+
+#popupContainer {
+    /* position: relative; */
+    display: inline-block;
+    height: 0px;
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  
+  /* The actual popup */
+  #popupContainer #welcomePopup {
+    /* visibility: hidden; */
+    width: 90%;
+    height: 85%;
+    background-color: rgba(32, 21, 71, 0.95);
+    color: #fff;
+    text-align: center;
+    /* border-radius: 6px; */
+    /* padding: 8px 0; */
+    position: absolute;
+    z-index: 1;
+    margin-left: 5%;
+    margin-top: 2%;
+    border-radius: 10px;
+    border: 2px solid white;
+    /* bottom: 125%; */
+    /* left: 50%; */
+    /* margin-left: -80px; */
+  }
+  
+  /* Popup arrow */
+  #popupContainer #welcomePopup::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #555 transparent transparent transparent;
+  }
+  
+  /* Toggle this class - hide and show the popup */
+  #popupContainer .show {
+    visibility: visible;
+    -webkit-animation: fadeIn 1s;
+    animation: fadeIn 1s;
+  }
+  
+  /* Add animation (fade in the popup) */
+  @-webkit-keyframes fadeIn {
+    from {opacity: 0;} 
+    to {opacity: 1;}
+  }
+  
+  @keyframes fadeIn {
+    from {opacity: 0;}
+    to {opacity:1 ;}
+  }
+
+  .tab{
+    font-size: 20px;
+    width: 33%;
+    background-color:  rgba(88, 47, 128);
+    border: 1px solid darkgray;
+    color: white;
+    /* padding: 0px; */
+    padding-left: 0px;
+    margin-left: 0px;
+    margin-right: 0px;
+    padding-right: 0px;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 2px 2px 2px 2px;
+}
+
+#chat-tab{
+    /* selected */
+    /* background-color:  rgba(88, 47, 128); */
+}
+
+.selected-tab{
+    background-color:   #4caf50;
+    color: white;
+    border: 1px solid darkgray;
+}
+
+#chatMode {
+}
+
+#learnMode{
+    display: none;
+}
+
+#practiceMode{
+    display: none;
+}
+
+#popupContainer #uploadPopup{
+    display: none;
+    width: 90%;
+    height: 85%;
+    background-color: rgba(32, 21, 71, 0.95);
+    color: #fff;
+    text-align: center;
+    position: absolute;
+    z-index: 1;
+    margin-left: 5%;
+    margin-top: 2%;
+    border-radius: 10px;
+    border: 2px solid white;
+}
+
+#sidebar-content{
+    padding: 20px;
+    height: 100%;
+    overflow-y: auto;
+}
+
+#sidebar-content h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+#sidebar-content ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.document-item{
+    background-color: #333;
+    color: #fff;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#flashcardContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: black;
+}
+
+#flashcardDisplay {
+    position: relative;
+    width: 400px;
+    height: 250px;
+    perspective: 1000px;
+    margin-bottom: 20px;
+}
+
+.flashcard {
+    width: 100%;
+    height: 80%;
+    position: absolute;
+    border-radius: 10px;
+    background-color: white;
+    color: black;
+    text-align: center;
+    padding: 30px;
+    font-size: 24px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    backface-visibility: hidden;
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+}
+
+.flashcard .front,
+.flashcard .back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    border-radius: 10px;
+    padding: 30px;
+    box-sizing: border-box;
+    backface-visibility: hidden;
+}
+
+.flashcard .front {
+    background-color: white;
+    transform: rotateY(0deg);
+}
+
+.flashcard .back {
+    background-color: #e0e0e0;
+    transform: rotateY(180deg);
+}
+
+.flashcard.flipped {
+    transform: rotateY(180deg);
+}
+
+#cardControls {
+    display: block;
+    gap: 10px;
+}

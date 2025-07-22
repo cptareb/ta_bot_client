@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Matemasie&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<!-- Import CSS file -->
+	<link rel="stylesheet" href="styles.css">
+	<!-- Import JavaScript file -->
+	<script src="script.js" defer></script>
+    <title>AI Assistant</title>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&family=Caveat:wght@400..700&display=swap" rel="stylesheet">
+	<svg width="0" height="0">
+		<defs>
+		  <clipPath id="chatBubbleClipPathBot" clipPathUnits="objectBoundingBox">
+			<path d="M 0 0 H 1 V 1 H 0.05 V 0.2 Q 0.05 0, 0 0 Z" />
+		  </clipPath>
+		</defs>
+		<defs>
+			<clipPath id="chatBubbleClipPathUser" clipPathUnits="objectBoundingBox">
+				<path d="M 1 0 H 0 V 1 H 0.95 V 0.2 Q 0.95 0, 1 0 Z" />
+			</clipPath>
+		  </defs>
+	  </svg>
+</head>
+<body>
+
+  <div id="popupContainer">
+    <div id="welcomePopup">
+      <h1>Welcome to the Teaching Assistant App!</h1>
+      <h2>New User? Enter Username:</h2>
+      <input type="text" id="usernameInput" placeholder="Enter your new username here..."><br/>
+      
+      <h2>Existing User?</h2>
+      <input type="text" id="existingUserInput" placeholder="Enter your existing username here...">
+      <br/><br/>
+      <button id="submitUsernameBtn" onclick="submitUsername()">Submit</button>
+    </div>
+    <div id="uploadPopup">
+      <button id="closePopupBtn" onclick="hideUploadPopup()">X</button>
+      <h1>Upload PDF</h1>
+      <input type="file" id="pdfInput" accept=".pdf">
+      <button id="uploadDocBtn" onclick="onUploadDocument()">Upload</button>
+    </div>
+  </div>  
+  <div id="grid-container">
+    <div id="sidebar">
+      <span style="font-size: large;">Documents</span>
+      <button id="uploadBtn" class="sidebar-button" onclick="showUploadPopup();">+</button>
+      
+      <div id="sidebar-content">
+        <ul id="documentList">
+          <!-- Document list will be populated here -->
+        </ul>
+    </div>
+  </div>
+	<!-- style="border-radius: 50%; margin: 10px;"/> -->
+    <!-- <div id="modeButtons">
+        <button id="taBtn" class="modeButton" onclick="switchMode('TA')">TA</button>
+        <button id="advisorBtn" class="modeButton" onclick="switchMode('Advisor')">Advisor</button>
+    </div> -->
+	<!-- <h1 class="matemasie-regular">Mister Cat GPTA</h1> -->
+    <!-- <p><i>Under development by <b>Emirhan Gencer</b> and <b>Jack Patterson</b> during Summer 2024, advised by Dr. Fahad Sultan.</i><br/><br/> -->
+    <!-- This is currently based on GPT-3.5 and trained on basic information about the Computer Science department at Furman and <a href="https://fahadsultan.com/csc272">CSC-272 course syllabus</a>.</p> -->
+    <!-- <p><u> Use and trust information at your own risk!</u> This is not ready for prime time, yet.</p> -->
+    <!-- <p><i>Every query costs us around 0.33 cents, so around $1 for 300 queries. Please use mindfully and do not spam.</i></p> -->
+    
+
+    <!-- <p id="Advisor_Questions">
+    <b>Sample Queries (Advisor)</b><br/>
+    <a href="#" class="query">I am a freshman at Furman and am interested in some Computer Science courses. What can I take in Fall that have no pre-requisites?</a><br/>
+    <a href="#" class="query">What are the graduation requirements for Computer Science?</a><br/>
+    <a href="#" class="query">What is the difference between Computer Science and IT degrees at Furman?</a><br/>
+    <a href="#" class="query">What will I learn in CSC-272? Does it involve a project? If so, how much of the course grade is it worth?</a><br/> 
+    <a href="#" class="query">Who started the data analytics minor at Furman?</a><br/>
+    </p>
+    
+    <p id="TA_Questions">
+    <b>Sample Queries (TA)</b><br/>
+    <a href="#" class="query">What is the difference between worldviews of a probabilist and statistician?</a><br/>
+    <a href="#" class="query">If I have an 85 in the course right now, what do I need on the final to get an A?</a><br/>
+    <a href="#" class="query">When is the final exam for this course?</a><br/>
+    <a href="#" class="query">When is the next assignment due?</a><br/>
+    <a href="#" class="query">What is the textbook for the course?</a><br/>
+    <a href="#" class="query">Isn't logistic regression actually classification? Why is it called regression then?</a><br/>
+    <a href="#" class="query">Can you give me the URL for Bayes Theorem ?</a><br/>
+    <a href="#" class="query">How do I read a CSV file in pandas?</a><br/>
+    <a href="#" class="query">Can you give me some ideas for the course project, each with a public dataset? I like Mexican food and Soccer.</a><br/>
+    <a href="#" class="query">Can you help me identify the problem with this line of code: `pd.read_csv["test.csv"]` without giving away the answer</a><br/>
+    <a href="#" class="query">There was a question on the test about Classification. I said classification is used for predicting continuous variables. Why is this wrong?</a><br/>
+	<a href="#" class="query">How do I use seaborn to visualize a dataset? Explain with both text and code.</a><br/>
+    </p> -->
+
+    <div id="chatContainer">
+      <div id="chatTabs">
+        <button id="chatTab"  class="tab selected-tab" onclick="switchTabs('chat')">Chat</button>
+        <button id="learnTab" class="tab" onclick="switchTabs('learn')">Learn</button>
+        <button id="practiceTab" class="tab" onclick="switchTabs('practice')">Practice</button>
+
+      </div>
+      <div id="chatMode">
+        <div id="chatbox">
+          <img align="left" id="mister" src="mister/1.jpg"/>
+          <img align="right" id="paladin" src="paladin.png"/>
+        </div>
+            
+        <div style="display: flex; margin-top: 10px;">
+              <input type="text" id="userInput" placeholder="Type your prompts here....">
+              <button id="sendBtn" type="button" onclick="sendMessage()">Send</button>
+          <button id="eraseBtn" onclick="eraseMemory()">Erase Memory</button>
+          </div>
+        
+          <div id="sendingStatus" class="sending-message" style="display: none;">Sending...</div>
+        <ul id="urlsList"></ul>
+    </div>
+    <div id="learnMode">
+      <!-- Upload PDF -->
+       <h2>Learn Mode</h2>
+       
+       <div id="flashcardContainer">
+        <div id="flashcardDisplay"></div>
+        <div id="cardControls">
+            <button onclick="previousCard()">Previous</button>
+            <button onclick="nextCard()">Next</button>
+        </div>
+    </div>
+    </div>
+    </div>
+    <!-- <script>
+      window.addEventListener("DOMContentLoaded", initialize);
+  </script> -->
+    </div>
+  </div>
+</body>
+</html>
+
+<script>
+  const flashcards = [
+    { question: "a", answer: "b" },
+    { question: "c", answer: "d" },
+    { question: "e", answer: "f" }
+];
+
+let currentCardIndex = 0;
+
+function showFlashcard(index) {
+    const display = document.getElementById("flashcardDisplay");
+    display.innerHTML = ''; // clear
+
+    const data = flashcards[index];
+
+    const card = document.createElement("div");
+    card.className = "flashcard";
+    card.onclick = () => card.classList.toggle("flipped");
+
+    card.innerHTML = `
+        <div class="front">${data.question}</div>
+        <div class="back">${data.answer}</div>
+    `;
+
+    display.appendChild(card);
+}
+
+function nextCard() {
+    if (currentCardIndex < flashcards.length - 1) {
+        currentCardIndex++;
+        showFlashcard(currentCardIndex);
+    }
+}
+
+function previousCard() {
+    if (currentCardIndex > 0) {
+        currentCardIndex--;
+        showFlashcard(currentCardIndex);
+    }
+}
+
+// Initialize the first card on load
+document.addEventListener("DOMContentLoaded", function () {
+    showFlashcard(currentCardIndex);
+});
+</script>
