@@ -453,6 +453,9 @@ async function onUploadDocument(event){
     const fileInput = document.getElementById('pdfInput');
     // Get the selected file
     const file = fileInput.files[0];
+    const formData = new FormData();
+    formData.append('pdf', file);
+
     // Check if a file is selected
     if (!file) {
         alert('Please select a PDF file to upload.');
@@ -467,21 +470,8 @@ async function onUploadDocument(event){
     const listItem = document.createElement('li');
     listItem.textContent = filename;
     listItem.className = 'document-item';
-
-    //What the sidebar documents do when clicked
-    listItem.onclick = () => {
-        if (document.getElementById('chatTab').classList.contains('selected-tab')){
-            document.getElementById('userInput').value = `Read ${filename}`;
-        }
-        else if (document.getElementById('learnTab').classList.contains('selected-tab')){
-            //flashcard generation logic MOVE HERE (done)
-            //Problem: want to save first instance of gen'd questions per PDF, don't regen every time
-            doFlashcards(formData);
-        }
-        else if (document.getElementById('practiceTab').classList.contains('selected-tab')) {
-            // Practice mode logic here
-            doQuiz(formData);
-        }
+    listItem.onclick = function(event) {
+        onDocumentClick(event, formData);
     };
     documentList.appendChild(listItem);
     // Clear the file input
@@ -489,10 +479,28 @@ async function onUploadDocument(event){
     // Hide the upload popup
     hideUploadPopup();
     // Create a FormData object to send the file
-    const formData = new FormData();
-    formData.append('pdf', file);
+    //What the sidebar documents do when clicked
+    
 
 
+}
+
+async function onDocumentClick(event, formData) {
+    const filename = event.target.textContent;
+    console.log("Document clicked:", filename);
+    if (document.getElementById('chatTab').classList.contains('selected-tab')){
+        document.getElementById('userInput').value = `Read ${filename}`;
+    }
+    else if (document.getElementById('learnTab').classList.contains('selected-tab')){
+        //flashcard generation logic MOVE HERE (done)
+        //Problem: want to save first instance of gen'd questions per PDF, don't regen every time
+        doFlashcards(formData);
+    }
+    else if (document.getElementById('practiceTab').classList.contains('selected-tab')) {
+        // Practice mode logic here
+        console.log("Practice mode selected");
+        doQuiz(formData);
+    }
 }
 
 async function doFlashcards(formData) {
@@ -542,6 +550,125 @@ async function doQuiz(formData){
     try {
         // const response = await fetch('http://127.0.0.1:5000/tabot/upload_pdf', settings);
         const response = await fetch('http://127.0.0.1:5000/tabot/testmaker', settings);
+
+        const newQuiz = await response.json();
+
+        console.log(newQuiz);
+        
+        var questions = newQuiz['quiz'];
+        for (let i = 0; i < questions.length; i++) {
+            if (questions[i].type === "multiple choice") {
+                var div = document.createElement("div");
+                div.setAttribute("class", "mcq-question");
+
+                var questionText = document.createElement("p");
+                questionText.innerHTML = questions[i].question;
+
+                div.appendChild(questionText);
+                var options = questions[i].options;
+                for (const [key, value] of Object.entries(options)) {
+                    var button = document.createElement("button");
+                    button.setAttribute("class", "mcq-option");
+                    button.innerHTML = parseInt(key)+1 + ". " + value;
+                    button.setAttribute("onclick", `selectMCQ('${key}')`);
+                    div.appendChild(button);
+                }
+                document.getElementById("practiceContent").appendChild(div);
+            }
+            else if (questions[i].type === "short answer") {
+                var div = document.createElement("div");
+                div.setAttribute("class", "frq-question");
+
+                var questionText = document.createElement("p");
+                questionText.innerHTML = questions[i].question;
+
+                var textarea = document.createElement("textarea");
+                textarea.setAttribute("class", "frqAnswer");
+                textarea.setAttribute("placeholder", "Type your answer here...");
+                textarea.setAttribute("onchange", `saveFRQ(${i}, this.value)`);
+
+                div.appendChild(questionText);
+                div.appendChild(textarea);
+                document.getElementById("practiceContent").appendChild(div);
+            }
+            else if (questions[i].type === "match") {
+
+                var div = document.createElement("div");
+                div.setAttribute("class", "match-question");
+                var questionText = document.createElement("p");
+                questionText.innerHTML = questions[i].question;
+
+                col1 = [];
+                col2 = [];
+                for (const [term, definition] of Object.entries(questions[i].pairs)) {
+                    col1.push(definition[0]);
+                    col2.push(definition[1]);
+                }
+
+                // shuffle col2 
+                col2.sort(() => Math.random() - 0.5);
+
+                var table = document.createElement("table");
+                table.setAttribute("class", "match-table");
+                var tbody = document.createElement("tbody");
+                var tr = document.createElement("tr");
+                var td1 = document.createElement("td");
+                var td2 = document.createElement("td");
+
+                col1_list = document.createElement("ul");
+                col2_list = document.createElement("ul");
+                col2_list.setAttribute("id", "sortable");
+
+                
+                for (let j = 0; j < col1.length; j++) {
+                    
+                    // <li class="ui-state-default"><span class="ui-icon ui-icon-arrowthick-2-n-s"></span>Item 1</li>
+
+                    var li1 = document.createElement("li");
+                    li1.setAttribute("class", "ui-state-default");
+                    var span1 = document.createElement("span");
+                    span1.setAttribute("class", "ui-icon ui-icon-arrowthick-2-n-s");
+                    li1.appendChild(span1);
+                    li1.innerHTML += col1[j];
+                    col1_list.appendChild(li1);
+
+                    var li2 = document.createElement("li");
+                    li2.setAttribute("class", "ui-state-default");
+                    var span2 = document.createElement("span");
+                    span2.setAttribute("class", "ui-icon ui-icon-arrowthick-2-n-s");
+                    li2.appendChild(span2);
+                    li2.innerHTML += col2[j];
+                    col2_list.appendChild(li2);
+
+
+                }
+
+                tr.appendChild(td1);
+                tr.appendChild(td2);
+                tbody.appendChild(tr);
+                td1.appendChild(col1_list);
+                td2.appendChild(col2_list);
+                
+                // Make the second column sortable
+       
+                table.appendChild(tbody);
+                div.appendChild(questionText);
+                div.appendChild(table);
+                document.getElementById("practiceContent").appendChild(div);
+                $( function() {
+                    $( "#sortable" ).sortable();
+                } );
+ 
+            }
+        }
+
+        var submitBtn = document.createElement("button");
+        submitBtn.innerHTML = "Submit Answers";
+        submitBtn.setAttribute("id", "submitAnswersBtn");
+        submitBtn.setAttribute("onclick", "submitAnswers()");
+
+        document.getElementById("practiceContent").appendChild(submitBtn);
+
         return;
 
     } catch (err) {
@@ -582,15 +709,138 @@ async function injectQuiz(){
 
 }
 
-// User input example (chatGPT helped)
-// {
-//   "userAnswers": [
-//     { "type": "mcq", "response": "B" },
-//     { "type": "frq", "response": "It's how plants make food from sunlight." },
-//     { "type": "match", "response": {
-//       "Osmosis": "Movement of water across a membrane",
-//       "Mitosis": "Cell division process",
-//       "Photosynthesis": "Conversion of sunlight into energy"
-//     }}
-//   ]
-// }
+
+
+window.flashcards = [
+  { question: "a", answer: "b" },
+  { question: "c", answer: "d" }
+  ];
+  window.currentCardIndex = 0;
+
+  window.quiz = [
+  {
+    type: "mcq",
+    question: "What is the capital of France?",
+    options: {
+      A: "Berlin",
+      B: "Paris",
+      C: "Rome",
+      D: "Madrid"
+    },
+    correct: "B"
+  },
+  {
+    type: "frq",
+    question: "Explain the water cycle.",
+    idealAnswer: "..."
+  },
+  {
+    type: "match",
+    question: "Match the terms to definitions.",
+    pairs: {
+      "Evaporation": "Water turning into vapor",
+      "Condensation": "Vapor forming clouds",
+      "Precipitation": "Rainfall"
+    }
+  }
+];
+
+window.showFlashcard = function(index){
+    const display = document.getElementById("flashcardDisplay");
+    display.innerHTML = ''; // clear
+
+    // We need to access flashcard text from backend here
+    const data = flashcards[index];
+    console.log('Rendering flashcard:', data);
+    console.log("flashcards length:", flashcards.length);
+    console.log("flashcards[0]:", flashcards[0]);
+
+    const card = document.createElement("div");
+    card.className = "flashcard";
+    card.onclick = () => card.classList.toggle("flipped");
+
+    card.innerHTML = `
+        <div class="front">${data.question}</div>
+        <div class="back">${data.answer}</div>
+    `;
+
+    display.appendChild(card);
+}
+
+window.renderQuiz = function(quizData){
+  const container = document.getElementById("quizContainer");
+  container.innerHTML = ''; // clear previous content
+
+  quizData.forEach((item, index) => {
+    let questionElement;
+
+    if (item.type === "mcq") {
+      questionElement = document.createElement("div");
+      questionElement.className = "question-mcq";
+      questionElement.innerHTML = `
+        <p>${index + 1}.${item.question}</p>
+        <div class="options">
+          ${Object.entries(item.options).map(([key, value]) => `
+            <button onclick="selectMCQ('${key}')">${key}. ${value}</button>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    else if (item.type == "frq"){
+      questionElement = document.createElement("div");
+      questionElement.className = "question-frq";
+      questionElement.innerHTML = `
+        <p>${index + 1}.${item.question}</p>
+        <textarea onchange="saveFRQ(${index}, this.value)"></textarea>
+      `;
+    }
+
+    else if (item.type == "match"){
+      const terms = Object.keys(item.pairs);
+      const definitions = Object.values(item.pairs);
+
+      questionElement = document.createElement("div");
+      questionElement.className = "question-match";
+      questionElement.innerHTML = `
+        <p>${index + 1}.${item.question}</p>
+        <div class="match-columns">
+          <div class="match-left">
+            ${terms.map(term => `<div class="match-term" onclick="selectMatchTerm(${index},'${term}')">${term}</div>`).join('')}
+          </div>
+          <div class="match-right">
+            ${definitions.map(def => `<div class="match-definition" onclick="selectMatchDefinition(${index},'${def}')">${def}</div>`).join('')}
+          </div>
+      </div>
+      `;
+
+      // next steps - handle user answers (global structure)
+      // then do per-type response tracking (i.e., saveMCQ, saveFRQ, saveMatch)
+      // then send user response to LLM for grading
+      // maybe a shuffle fxn for match? low priority
+    }
+
+    container.appendChild(questionElement);
+  });
+}
+
+
+
+function nextCard() {
+    if (currentCardIndex < flashcards.length - 1) {
+        currentCardIndex++;
+        showFlashcard(currentCardIndex);
+    }
+}
+
+function previousCard() {
+    if (currentCardIndex > 0) {
+        currentCardIndex--;
+        showFlashcard(currentCardIndex);
+    }
+}
+
+// Initialize the first card on load
+document.addEventListener("DOMContentLoaded", function () {
+    showFlashcard(currentCardIndex);
+});
