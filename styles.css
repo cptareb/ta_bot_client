@@ -271,6 +271,7 @@ pre code {
 }
 
 #chatMode {
+    display: block;
 }
 
 #learnMode{

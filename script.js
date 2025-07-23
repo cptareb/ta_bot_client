@@ -400,7 +400,7 @@ function initialize(username, existing=false){
     popup.setAttribute("visibility", "visible");
 }
 
-function switchTabs(mode){
+async function switchTabs(mode){
     switch (mode) {
         case 'learn':
             document.getElementById('learnTab').classList.add('selected-tab');
@@ -412,13 +412,20 @@ function switchTabs(mode){
             // switchMode('Advisor');
             break;
         case 'practice':
+            console.log("Practice tab selected");
             document.getElementById('learnTab').classList.remove('selected-tab');
             document.getElementById('chatTab').classList.remove('selected-tab');
             document.getElementById('practiceTab').classList.add('selected-tab');
             document.getElementById("chatMode").style.display = "none";
             document.getElementById("learnMode").style.display = "none";
             document.getElementById("practiceMode").style.display = "block";
-            // switchMode('Advisor');
+            // await fetch('http://127.0.0.1:5000/tabot/pdftest', {
+            //     method: 'POST',
+            //     headers: {
+            //         'Content-Type': 'application/json'
+            //     },
+            //     body: JSON.stringify({ mode: 'practice' })
+            // });
             break;
         default:
             document.getElementById('learnTab').classList.remove('selected-tab');
@@ -451,10 +458,44 @@ async function onUploadDocument(event){
         alert('Please select a PDF file to upload.');
         return;
     }
+        
+    // Get filename
+    const filename = file.name;
+
+    // Add to sidebar documentList
+    const documentList = document.getElementById('documentList');
+    const listItem = document.createElement('li');
+    listItem.textContent = filename;
+    listItem.className = 'document-item';
+
+    //What the sidebar documents do when clicked
+    listItem.onclick = () => {
+        if (document.getElementById('chatTab').classList.contains('selected-tab')){
+            document.getElementById('userInput').value = `Read ${filename}`;
+        }
+        else if (document.getElementById('learnTab').classList.contains('selected-tab')){
+            //flashcard generation logic MOVE HERE (done)
+            //Problem: want to save first instance of gen'd questions per PDF, don't regen every time
+            doFlashcards(formData);
+        }
+        else if (document.getElementById('practiceTab').classList.contains('selected-tab')) {
+            // Practice mode logic here
+            doQuiz(formData);
+        }
+    };
+    documentList.appendChild(listItem);
+    // Clear the file input
+    fileInput.value = '';
+    // Hide the upload popup
+    hideUploadPopup();
     // Create a FormData object to send the file
     const formData = new FormData();
     formData.append('pdf', file);
 
+
+}
+
+async function doFlashcards(formData) {
     const settings = {
         method: 'POST',
         body: formData,
@@ -463,7 +504,8 @@ async function onUploadDocument(event){
         }
     };
     try {
-        const response = await fetch('http://127.0.0.1:5000/tabot/upload_pdf', settings);
+        // const response = await fetch('http://127.0.0.1:5000/tabot/upload_pdf', settings);
+        const response = await fetch('http://127.0.0.1:5000/tabot/pdftest', settings);
         flashcards.length = 0;
         console.log('Purged flashcards');
         const newCards = await response.json();
@@ -487,32 +529,68 @@ async function onUploadDocument(event){
         console.error(err);
         alert("Something went wrong generating flashcards");
     }
-        
-    // Get filename
-    const filename = file.name;
+}
 
-    // Add to sidebar documentList
-    const documentList = document.getElementById('documentList');
-    const listItem = document.createElement('li');
-    listItem.textContent = filename;
-    listItem.className = 'document-item';
-
-    //What the sidebar documents do when clicked
-    listItem.onclick = () => {
-        if (document.getElementById('chatTab').classList.contains('selected-tab')){
-            document.getElementById('userInput').value = `Read ${filename}`;
+async function doQuiz(formData){
+    const settings = {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'Accept': 'application/json',
         }
-        else if (document.getElementById('learnTab').classList.contains('selected-tab')){
-            //flashcard generation logic
-            console.log('placeholder');
-        }
-        //Flashcard functionality here?
-        document.getElementById('flashcardDisplay');
     };
-    documentList.appendChild(listItem);
-    // Clear the file input
-    fileInput.value = '';
-    // Hide the upload popup
-    hideUploadPopup();
+    try {
+        // const response = await fetch('http://127.0.0.1:5000/tabot/upload_pdf', settings);
+        const response = await fetch('http://127.0.0.1:5000/tabot/testmaker', settings);
+        return;
+
+    } catch (err) {
+        console.error(err);
+        alert("Something went wrong generating quiz");
+    }
+}
+
+async function injectQuiz(){
+    const placeholder = [
+  {
+    type: "mcq",
+    question: "What is the capital of France?",
+    options: {
+      A: "Berlin",
+      B: "Paris",
+      C: "Rome",
+      D: "Madrid"
+    },
+    correct: "B"
+  },
+  {
+    type: "frq",
+    question: "Explain the water cycle.",
+    idealAnswer: "..."
+  },
+  {
+    type: "match",
+    question: "Match the terms to definitions.",
+    pairs: {
+      "Evaporation": "Water turning into vapor",
+      "Condensation": "Vapor forming clouds",
+      "Precipitation": "Rainfall"
+    }
+  }
+];
+
 
 }
+
+// User input example (chatGPT helped)
+// {
+//   "userAnswers": [
+//     { "type": "mcq", "response": "B" },
+//     { "type": "frq", "response": "It's how plants make food from sunlight." },
+//     { "type": "match", "response": {
+//       "Osmosis": "Movement of water across a membrane",
+//       "Mitosis": "Cell division process",
+//       "Photosynthesis": "Conversion of sunlight into energy"
+//     }}
+//   ]
+// }

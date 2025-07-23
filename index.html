@@ -95,6 +95,48 @@
         </div>
     </div>
     </div>
+    <div id="quizContainer"></div>
+    <!-- <div id="practiceMode">
+      <h2>Practice Mode header</h2>
+      <div id="practiceContent">
+        <p>Practice mode paragraph.</p>
+        <button id="startPracticeBtn" onclick="startPractice()">Start Practice</button>
+        <div id="practiceQuestions"></div>
+        <div id="practiceAnswers"></div>
+
+        <div class="mcq-question">
+          <p>What is 1+1?</p>
+          <button onclick="selectMCQ('A')">A. 1</button>
+          <button onclick="selectMCQ('B')">B. 2</button>
+          <button onclick="selectMCQ('C')">C. 3</button>
+          <button onclick="selectMCQ('D')">D. 4</button>
+        </div>
+
+        <div class="match-question">
+          <p>Match the terms with their definitions:</p>
+        <div class="column terms">
+          <div class="term" onclick="selectTerm('A')">A</div>
+          <div class="term" onclick="selectTerm('B')">B</div>
+          <div class="term" onclick="selectTerm('C')">C</div>
+        </div>
+        <div class="column-definitions">
+          <div class="definition" onclick="selectDefinition('A')">A</div>
+          <div class="definition" onclick="selectDefinition('B')">B</div>
+          <div class="definition" onclick="selectDefinition('C')">C</div>
+        </div>
+      </div>
+
+        <div class="frq-question">
+          <p>FRQ box here.</p>
+          <textarea id="frqAnswer"></textarea>
+        </div>
+
+        <button id="submitFrqBtn" onclick="submitFrqAnswer()">Submit FRQ Answer</button>
+        <div id="frqFeedback"></div>
+        <button id="submitAnswersBtn" onclick="submitAnswers()">Submit Answers</button>
+        <div id="practiceResults"></div>
+      </div> -->
+    </div>
     </div>
     </div>
   </div>
@@ -107,6 +149,34 @@
   { question: "c", answer: "d" }
   ];
   window.currentCardIndex = 0;
+
+  window.quiz = [
+  {
+    type: "mcq",
+    question: "What is the capital of France?",
+    options: {
+      A: "Berlin",
+      B: "Paris",
+      C: "Rome",
+      D: "Madrid"
+    },
+    correct: "B"
+  },
+  {
+    type: "frq",
+    question: "Explain the water cycle.",
+    idealAnswer: "..."
+  },
+  {
+    type: "match",
+    question: "Match the terms to definitions.",
+    pairs: {
+      "Evaporation": "Water turning into vapor",
+      "Condensation": "Vapor forming clouds",
+      "Precipitation": "Rainfall"
+    }
+  }
+];
 
 window.showFlashcard = function(index){
     const display = document.getElementById("flashcardDisplay");
@@ -129,6 +199,64 @@ window.showFlashcard = function(index){
 
     display.appendChild(card);
 }
+window.renderQuiz = function(quizData){
+  const container = document.getElementById("quizContainer");
+  container.innerHTML = ''; // clear previous content
+
+  quizData.forEach((item, index) => {
+    let questionElement;
+
+    if (item.type === "mcq") {
+      questionElement = document.createElement("div");
+      questionElement.className = "question-mcq";
+      questionElement.innerHTML = `
+        <p>${index + 1}.${item.question}</p>
+        <div class="options">
+          ${Object.entries(item.options).map(([key, value]) => `
+            <button onclick="selectMCQ('${key}')">${key}. ${value}</button>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    else if (item.type == "frq"){
+      questionElement = document.createElement("div");
+      questionElement.className = "question-frq";
+      questionElement.innerHTML = `
+        <p>${index + 1}.${item.question}</p>
+        <textarea onchange="saveFRQ(${index}, this.value)"></textarea>
+      `;
+    }
+
+    else if (item.type == "match"){
+      const terms = Object.keys(item.pairs);
+      const definitions = Object.values(item.pairs);
+
+      questionElement = document.createElement("div");
+      questionElement.className = "question-match";
+      questionElement.innerHTML = `
+        <p>${index + 1}.${item.question}</p>
+        <div class="match-columns">
+          <div class="match-left">
+            ${terms.map(term => `<div class="match-term" onclick="selectMatchTerm(${index},'${term}')">${term}</div>`).join('')}
+          </div>
+          <div class="match-right">
+            ${definitions.map(def => `<div class="match-definition" onclick="selectMatchDefinition(${index},'${def}')">${def}</div>`).join('')}
+          </div>
+      </div>
+      `;
+
+      // next steps - handle user answers (global structure)
+      // then do per-type response tracking (i.e., saveMCQ, saveFRQ, saveMatch)
+      // then send user response to LLM for grading
+      // maybe a shuffle fxn for match? low priority
+    }
+
+    container.appendChild(questionElement);
+  });
+}
+
+
 
 function nextCard() {
     if (currentCardIndex < flashcards.length - 1) {
