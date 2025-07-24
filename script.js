@@ -539,7 +539,11 @@ async function doFlashcards(formData) {
     }
 }
 
+var userQuizResponse = [];
+
 async function doQuiz(formData){
+    document.getElementById("practiceContent").innerHTML = "";
+    userQuizResponse = [];
     const settings = {
         method: 'POST',
         body: formData,
@@ -551,13 +555,13 @@ async function doQuiz(formData){
         // const response = await fetch('http://127.0.0.1:5000/tabot/upload_pdf', settings);
         const response = await fetch('http://127.0.0.1:5000/tabot/testmaker', settings);
 
-        const newQuiz = await response.json();
+        window.newQuiz = await response.json();
 
         console.log(newQuiz);
         
         var questions = newQuiz['quiz'];
         for (let i = 0; i < questions.length; i++) {
-            if (questions[i].type === "multiple choice") {
+            if (questions[i].type === "multiple_choice") {
                 var div = document.createElement("div");
                 div.setAttribute("class", "mcq-question");
 
@@ -566,16 +570,17 @@ async function doQuiz(formData){
 
                 div.appendChild(questionText);
                 var options = questions[i].options;
+                var id = questions[i].id;
                 for (const [key, value] of Object.entries(options)) {
                     var button = document.createElement("button");
                     button.setAttribute("class", "mcq-option");
                     button.innerHTML = parseInt(key)+1 + ". " + value;
-                    button.setAttribute("onclick", `selectMCQ('${key}')`);
+                    button.setAttribute("onclick", `selectMCQ(['${id}', '${key}'])`);
                     div.appendChild(button);
                 }
                 document.getElementById("practiceContent").appendChild(div);
             }
-            else if (questions[i].type === "short answer") {
+            else if (questions[i].type === "short_answer") {
                 var div = document.createElement("div");
                 div.setAttribute("class", "frq-question");
 
@@ -677,36 +682,8 @@ async function doQuiz(formData){
     }
 }
 
-async function injectQuiz(){
-    const placeholder = [
-  {
-    type: "mcq",
-    question: "What is the capital of France?",
-    options: {
-      A: "Berlin",
-      B: "Paris",
-      C: "Rome",
-      D: "Madrid"
-    },
-    correct: "B"
-  },
-  {
-    type: "frq",
-    question: "Explain the water cycle.",
-    idealAnswer: "..."
-  },
-  {
-    type: "match",
-    question: "Match the terms to definitions.",
-    pairs: {
-      "Evaporation": "Water turning into vapor",
-      "Condensation": "Vapor forming clouds",
-      "Precipitation": "Rainfall"
-    }
-  }
-];
-
-
+async function submitAnswers(){
+    return;
 }
 
 
@@ -717,33 +694,33 @@ window.flashcards = [
   ];
   window.currentCardIndex = 0;
 
-  window.quiz = [
-  {
-    type: "mcq",
-    question: "What is the capital of France?",
-    options: {
-      A: "Berlin",
-      B: "Paris",
-      C: "Rome",
-      D: "Madrid"
-    },
-    correct: "B"
-  },
-  {
-    type: "frq",
-    question: "Explain the water cycle.",
-    idealAnswer: "..."
-  },
-  {
-    type: "match",
-    question: "Match the terms to definitions.",
-    pairs: {
-      "Evaporation": "Water turning into vapor",
-      "Condensation": "Vapor forming clouds",
-      "Precipitation": "Rainfall"
-    }
-  }
-];
+//   window.quiz = [
+//   {
+//     type: "mcq",
+//     question: "What is the capital of France?",
+//     options: {
+//       A: "Berlin",
+//       B: "Paris",
+//       C: "Rome",
+//       D: "Madrid"
+//     },
+//     correct: "B"
+//   },
+//   {
+//     type: "frq",
+//     question: "Explain the water cycle.",
+//     idealAnswer: "..."
+//   },
+//   {
+//     type: "match",
+//     question: "Match the terms to definitions.",
+//     pairs: {
+//       "Evaporation": "Water turning into vapor",
+//       "Condensation": "Vapor forming clouds",
+//       "Precipitation": "Rainfall"
+//     }
+//   }
+// ];
 
 window.showFlashcard = function(index){
     const display = document.getElementById("flashcardDisplay");
@@ -767,64 +744,27 @@ window.showFlashcard = function(index){
     display.appendChild(card);
 }
 
-window.renderQuiz = function(quizData){
-  const container = document.getElementById("quizContainer");
-  container.innerHTML = ''; // clear previous content
 
-  quizData.forEach((item, index) => {
-    let questionElement;
+function selectMCQ(response) {
+    // console.log('curr quiz:', newQuiz);
+    let id = response[0];
+    let option = response[1];
+    console.log('option', option);
+    console.log('id', id);
 
-    if (item.type === "mcq") {
-      questionElement = document.createElement("div");
-      questionElement.className = "question-mcq";
-      questionElement.innerHTML = `
-        <p>${index + 1}.${item.question}</p>
-        <div class="options">
-          ${Object.entries(item.options).map(([key, value]) => `
-            <button onclick="selectMCQ('${key}')">${key}. ${value}</button>
-          `).join('')}
-        </div>
-      `;
+    //if question unanswered, add it
+    if (!userQuizResponse.some(r => r.id === id)) {
+        userQuizResponse.push({type: "multiple choice", response: option, id: id});
     }
+    //if question already answered, replace it
+    userQuizResponse.push({type: "multiple choice", response: option, id: id});
+    console.log('userQuizResponse:', userQuizResponse);
 
-    else if (item.type == "frq"){
-      questionElement = document.createElement("div");
-      questionElement.className = "question-frq";
-      questionElement.innerHTML = `
-        <p>${index + 1}.${item.question}</p>
-        <textarea onchange="saveFRQ(${index}, this.value)"></textarea>
-      `;
-    }
-
-    else if (item.type == "match"){
-      const terms = Object.keys(item.pairs);
-      const definitions = Object.values(item.pairs);
-
-      questionElement = document.createElement("div");
-      questionElement.className = "question-match";
-      questionElement.innerHTML = `
-        <p>${index + 1}.${item.question}</p>
-        <div class="match-columns">
-          <div class="match-left">
-            ${terms.map(term => `<div class="match-term" onclick="selectMatchTerm(${index},'${term}')">${term}</div>`).join('')}
-          </div>
-          <div class="match-right">
-            ${definitions.map(def => `<div class="match-definition" onclick="selectMatchDefinition(${index},'${def}')">${def}</div>`).join('')}
-          </div>
-      </div>
-      `;
-
-      // next steps - handle user answers (global structure)
-      // then do per-type response tracking (i.e., saveMCQ, saveFRQ, saveMatch)
-      // then send user response to LLM for grading
-      // maybe a shuffle fxn for match? low priority
-    }
-
-    container.appendChild(questionElement);
-  });
 }
 
-
+function submitAnswers(){
+    console.log('Output:', userQuizResponse);
+}
 
 function nextCard() {
     if (currentCardIndex < flashcards.length - 1) {
@@ -844,3 +784,16 @@ function previousCard() {
 document.addEventListener("DOMContentLoaded", function () {
     showFlashcard(currentCardIndex);
 });
+
+// User input example (chatGPT helped)
+// {
+//   "userAnswers": [
+//     { "type": "mcq", "response": "B" },
+//     { "type": "frq", "response": "It's how plants make food from sunlight." },
+//     { "type": "match", "response": {
+//       "Osmosis": "Movement of water across a membrane",
+//       "Mitosis": "Cell division process",
+//       "Photosynthesis": "Conversion of sunlight into energy"
+//     }}
+//   ]
+// }
