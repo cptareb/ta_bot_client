@@ -398,6 +398,11 @@ function initialize(username, existing=false){
 
     var popup = document.getElementById("welcomePopup");
     popup.setAttribute("visibility", "visible");
+
+    // switch to practice mode by default
+    switchTabs('practice');
+    doQuiz(null);
+
 }
 
 async function switchTabs(mode){
@@ -473,6 +478,7 @@ async function onUploadDocument(event){
     listItem.onclick = function(event) {
         onDocumentClick(event, formData);
     };
+    
     documentList.appendChild(listItem);
     // Clear the file input
     fileInput.value = '';
@@ -481,7 +487,6 @@ async function onUploadDocument(event){
     // Create a FormData object to send the file
     //What the sidebar documents do when clicked
     
-
 
 }
 
@@ -553,13 +558,18 @@ async function doQuiz(formData){
     };
     try {
         // const response = await fetch('http://127.0.0.1:5000/tabot/upload_pdf', settings);
-        const response = await fetch('http://127.0.0.1:5000/tabot/testmaker', settings);
+        // const response = await fetch('http://127.0.0.1:5000/tabot/testmaker', settings);
 
-        window.newQuiz = await response.json();
+        // window.newQuiz = await response.json();
 
-        console.log(newQuiz);
+        // console.log(newQuiz);
+
+        // var questions = newQuiz['quiz'];
+
+        var questions = [{"type": "multiple_choice", "question": "During which era did dinosaurs roam the Earth?", "options": ["Cenozoic Era", "Mesozoic Era", "Paleozoic Era", "Cambrian Era"], "answer": "Mesozoic Era", "id": "mc_1"}, {"type": "multiple_choice", "question": "Which of the following is a herbivorous dinosaur?", "options": ["Tyrannosaurus rex", "Velociraptor", "Triceratops", "Allosaurus"], "answer": "Triceratops", "id": "mc_2"}, {"type": "multiple_choice", "question": "What is one of the main tools scientists use to study dinosaurs?", "options": ["Satellites", "Fossils", "Weather balloons", "Radiation meters"], "answer": "Fossils", "id": "mc_3"}, {"type": "short_answer", "question": "What major event is believed to have caused the extinction of most dinosaurs?", "answer": "A massive asteroid impact combined with volcanic activity and climate change.", "id": "sa_1"}, {"type": "short_answer", "question": "What years mark the start and end of the Mesozoic Era?", "answer": "About 252 to 66 million years ago.", "id": "sa_2"}, 
+        {"type": "match", "question": "Match the dinosaur to its diet.", "pairs": [{"Triceratops": "Herbivore"}, {"Brachiosaurus": "Herbivore"}, {"Tyrannosaurus rex": "Carnivore"}, {"Velociraptor": "Carnivore"}], "id": "m_1"}];
         
-        var questions = newQuiz['quiz'];
+        
         for (let i = 0; i < questions.length; i++) {
             if (questions[i].type === "multiple_choice") {
                 var div = document.createElement("div");
@@ -573,9 +583,11 @@ async function doQuiz(formData){
                 var id = questions[i].id;
                 for (const [key, value] of Object.entries(options)) {
                     var button = document.createElement("button");
-                    button.setAttribute("class", "mcq-option");
+                    button.setAttribute("class", "mcq-option "+id);
+                    button.setAttribute("id", `mcq-${id}-${key}`);
+                    button.setAttribute("question", value);
                     button.innerHTML = parseInt(key)+1 + ". " + value;
-                    button.setAttribute("onclick", `selectMCQ(['${id}', '${key}'])`);
+                    button.onclick = onMCQClick;
                     div.appendChild(button);
                 }
                 document.getElementById("practiceContent").appendChild(div);
@@ -585,12 +597,13 @@ async function doQuiz(formData){
                 div.setAttribute("class", "frq-question");
 
                 var questionText = document.createElement("p");
+                questionText.setAttribute("class", "frq-question-statement");
                 questionText.innerHTML = questions[i].question;
 
                 var textarea = document.createElement("textarea");
                 textarea.setAttribute("class", "frqAnswer");
                 textarea.setAttribute("placeholder", "Type your answer here...");
-                textarea.setAttribute("onchange", `saveFRQ(${i}, this.value)`);
+                // textarea.setAttribute("onchange", `saveFRQ(${i}, this.value)`);
 
                 div.appendChild(questionText);
                 div.appendChild(textarea);
@@ -606,10 +619,11 @@ async function doQuiz(formData){
                 col1 = [];
                 col2 = [];
                 for (const [term, definition] of Object.entries(questions[i].pairs)) {
-                    col1.push(definition[0]);
-                    col2.push(definition[1]);
+                    col1val = Object.keys(definition)[0]
+                    col2val = definition[col1val];
+                    col1.push(col1val);
+                    col2.push(col2val);
                 }
-
                 // shuffle col2 
                 col2.sort(() => Math.random() - 0.5);
 
@@ -621,7 +635,9 @@ async function doQuiz(formData){
                 var td2 = document.createElement("td");
 
                 col1_list = document.createElement("ul");
+                col1_list.setAttribute("class", "match-"+i+"-col1");
                 col2_list = document.createElement("ul");
+                col2_list.setAttribute("class", "match-"+i+"-col2");
                 col2_list.setAttribute("id", "sortable");
 
                 
@@ -674,6 +690,7 @@ async function doQuiz(formData){
 
         document.getElementById("practiceContent").appendChild(submitBtn);
 
+       
         return;
 
     } catch (err) {
@@ -683,7 +700,143 @@ async function doQuiz(formData){
 }
 
 async function submitAnswers(){
-    return;
+    var gradeContainer = document.createElement("div");
+    gradeContainer.setAttribute("id", "grade");
+
+    var gradeImg = document.createElement("img");
+    gradeImg.setAttribute("src", "grade.gif");
+    gradeImg.setAttribute("id", "gradeImg");
+    gradeImg.setAttribute("style", "display: none;filter:invert(1);");
+
+    var gradeText = document.createElement("p");
+    gradeText.setAttribute("id", "gradeText");
+    gradeText.innerHTML = "Click the button above to submit your answers and see your gradee";
+
+    var gradeNumber = document.createElement("p");
+    gradeNumber.setAttribute("id", "gradeNumber");
+    gradeNumber.innerHTML = "Your grade will appear here.";
+
+    gradeContainer.appendChild(gradeImg);
+    gradeContainer.appendChild(gradeText);
+    gradeContainer.appendChild(gradeNumber);
+    // document.getElementById("gradeImg").style.display = "block";
+
+    document.getElementById("practiceContent").appendChild(gradeContainer);
+
+    // Collect frq answers
+    var frqs = [];
+    var frqQuestions = document.querySelectorAll(".frq-question-statement");
+    var frqAnswers = document.querySelectorAll(".frqAnswer");
+    frqAnswers.forEach((textarea, index) => {
+        qa_pair = {};
+        qa_pair["question"] = frqQuestions[index].innerText; // Get question text
+        qa_pair["answer"] = textarea.value.trim(); // Get answer text
+        frqs.push(qa_pair);
+    });
+    
+    console.log("FRQs:", frqs);
+
+    // Collect match answers
+    var matches = [];
+    var matchQuestions = document.getElementsByClassName("match-question")
+
+    var numberOfQuestions = document.getElementsByTagName("p").length;
+    
+    for (let i = 0; i < matchQuestions.length; i++) {
+
+        var result = {};
+
+        var q = matchQuestions[i].getElementsByTagName("p")[0].innerText; // Get match question text
+
+        result["question"] = q; // Add question to result
+        result["pairs"] = [];
+
+        console.log("match-"+(numberOfQuestions-i-1)+"-col1");
+        console.log(document.getElementById("match-"+(numberOfQuestions-i-1)+"-col1"))
+
+        console.log("match-"+(numberOfQuestions-i-1)+"-col2");
+        console.log(document.getElementById("match-"+(numberOfQuestions-i-1)+"-col2"))
+
+        //This whole thing needs another look-through !!!!
+        var col1 = document.getElementsByClassName("match-"+(numberOfQuestions-i-3)+"-col1")[0].getElementsByTagName("li");
+        var col2 = document.getElementsByClassName("match-"+(numberOfQuestions-i-3)+"-col2")[0].getElementsByTagName("li");
+        for (let j = 0; j < col1.length; j++) {
+            var key = col1[j].innerText.trim(); // Get term text
+            var value = col2[j].innerText.trim(); // Get definition text
+            var tmp = {};
+            tmp[key] = value; // Create a key-value pair
+            result["pairs"].push(tmp); // Add to pairs array
+        }
+
+        matches.push(result);
+    }
+    console.log("Matches:", matches);
+
+    // Collect mcq answers [HANDLE RESELECTION]
+    var mcqs = [];
+    var mcqButtons = document.querySelectorAll(".mcq-option.selected");
+    mcqButtons.forEach(button => {
+        var id = button.getAttribute("id").split("-")[1]; // Get question id from button id
+        var key = button.getAttribute("id").split("-")[2]; // Get option key from button id
+        var answer = button.innerText.split(". ")[1]; // Get answer text from button innerText. Not "correct" answer per se
+        var question = button.getAttribute("question"); // Get expected answer from button attribute
+        mcqs.push({id: id, answer: answer, key: key, question:question}); // Add to mcqs array
+    }
+    );
+    console.log("MCQs:", mcqs);
+    var actualGrade = await computeGrade(mcqs, frqs, matches);
+    
+    // Animate ... for anticipation
+    gradeText.innerHTML = actualGrade[0];
+    gradeNumber.innerHTML = "Your final grade is " + actualGrade[1] + "/100";
+}
+
+async function computeGrade(mcqs, frqs, matches) {
+    // Placeholder grading logic
+    let grade = 0;
+    let totalQuestions = mcqs.length + frqs.length + matches.length;
+
+    var responses = {
+        mcqs: mcqs,
+        frqs: frqs,
+        matches: matches
+    };
+
+    const location = "http://127.0.0.1:5000/tabot/gradeQuiz";
+
+    const settings = {
+        method: 'POST',
+        headers: {'Accept': 'application/json', 'Content-Type': 'application/json'},
+        body: JSON.stringify({ 'quizAnswers': responses})
+    };
+
+    const fetchResponse = await fetch(location, settings);
+    if (!fetchResponse.ok) {
+        throw new Error(`HTTP error! Status: ${fetchResponse.status}`);
+    }
+    const data = await fetchResponse.json();
+    console.log("Grading response:", data);
+    return [data.feedback, data.grade];
+}
+
+function onMCQClick(event) {
+
+    console.log("MCQ button clicked");
+    var button = event.currentTarget;
+    var id = button.getAttribute("id");
+    var key = id.split("-")[2]; // Extract the key from the id
+    id = id.split("-")[1]; // Extract the id from the id
+    
+    console.log(id);
+    console.log(key);
+
+    selectMCQ([id, key]);
+    var buttons = document.querySelectorAll('.'+id);
+    console.log("buttons", buttons);
+    buttons.forEach(btn => {
+        btn.classList.remove("selected");
+    });
+    button.classList.add("selected");
 }
 
 
@@ -693,34 +846,6 @@ window.flashcards = [
   { question: "c", answer: "d" }
   ];
   window.currentCardIndex = 0;
-
-//   window.quiz = [
-//   {
-//     type: "mcq",
-//     question: "What is the capital of France?",
-//     options: {
-//       A: "Berlin",
-//       B: "Paris",
-//       C: "Rome",
-//       D: "Madrid"
-//     },
-//     correct: "B"
-//   },
-//   {
-//     type: "frq",
-//     question: "Explain the water cycle.",
-//     idealAnswer: "..."
-//   },
-//   {
-//     type: "match",
-//     question: "Match the terms to definitions.",
-//     pairs: {
-//       "Evaporation": "Water turning into vapor",
-//       "Condensation": "Vapor forming clouds",
-//       "Precipitation": "Rainfall"
-//     }
-//   }
-// ];
 
 window.showFlashcard = function(index){
     const display = document.getElementById("flashcardDisplay");
@@ -735,6 +860,9 @@ window.showFlashcard = function(index){
     const card = document.createElement("div");
     card.className = "flashcard";
     card.onclick = () => card.classList.toggle("flipped");
+
+    console.log('data.question:', data.question);
+    console.log('data.answer:', data.answer);
 
     card.innerHTML = `
         <div class="front">${data.question}</div>
@@ -757,13 +885,11 @@ function selectMCQ(response) {
         userQuizResponse.push({type: "multiple choice", response: option, id: id});
     }
     //if question already answered, replace it
+    else{
     userQuizResponse.push({type: "multiple choice", response: option, id: id});
+    }
     console.log('userQuizResponse:', userQuizResponse);
 
-}
-
-function submitAnswers(){
-    console.log('Output:', userQuizResponse);
 }
 
 function nextCard() {
