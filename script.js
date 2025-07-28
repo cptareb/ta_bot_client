@@ -349,10 +349,12 @@ function submitUsername(){
 
     // hide welcome popup
     initialize(username, existing);
+
+    window.username = username; // Store username globally for later use
 }
 
 // Remove later
-initialize("Greyson", true);
+// initialize("Greyson", true);
 
 
 function initialize(username, existing=false){
@@ -396,13 +398,33 @@ function initialize(username, existing=false){
     let openingMessage = existing ? openingMessageExisting : openingMessageNew;
     displayMessageOutput(openingMessage, 'bot', true);
 
-    var popup = document.getElementById("welcomePopup");
-    popup.setAttribute("visibility", "visible");
+    if (existing){
+        // Show the user's previous documents
+        fetchUserDocumentsList(username);
+    }
 
     // switch to practice mode by default
-    switchTabs('practice');
-    doQuiz(null);
+    // switchTabs('practice');
+    // doQuiz(null);
 
+}
+
+function fetchUserDocumentsList(username) {
+    // Fetch the user's documents from the server
+    const location = "http://127.0.0.1:5000/tabot/fetchUserDocs?userId=" + username;
+    fetch(location)
+        .then(response => response.json())
+        .then(function(data, index) {
+            docs = data['userDocuments'];
+            for (let i = 0; i < docs.length; i++) {
+                const doc = docs[i];
+                console.log("Document:", doc.filename);
+                addDocToSidebar(doc.filename, null);
+            }
+        })
+        .catch(error => {
+            console.error("Error fetching user documents:", error);
+        });
 }
 
 async function switchTabs(mode){
@@ -466,9 +488,12 @@ async function onUploadDocument(event){
         alert('Please select a PDF file to upload.');
         return;
     }
-        
-    // Get filename
-    const filename = file.name;
+    addDocToSidebar(file.name, formData);
+}
+
+function addDocToSidebar(filename, formData= null) {
+
+    console.log(filename, formData);
 
     // Add to sidebar documentList
     const documentList = document.getElementById('documentList');
@@ -481,13 +506,11 @@ async function onUploadDocument(event){
     
     documentList.appendChild(listItem);
     // Clear the file input
-    fileInput.value = '';
+    // fileInput.value = '';
     // Hide the upload popup
     hideUploadPopup();
     // Create a FormData object to send the file
     //What the sidebar documents do when clicked
-    
-
 }
 
 async function onDocumentClick(event, formData) {
@@ -499,7 +522,8 @@ async function onDocumentClick(event, formData) {
     else if (document.getElementById('learnTab').classList.contains('selected-tab')){
         //flashcard generation logic MOVE HERE (done)
         //Problem: want to save first instance of gen'd questions per PDF, don't regen every time
-        doFlashcards(formData);
+        console.log(event.target.textContent);
+        doFlashcards(formData, event.target.textContent);
     }
     else if (document.getElementById('practiceTab').classList.contains('selected-tab')) {
         // Practice mode logic here
@@ -508,17 +532,36 @@ async function onDocumentClick(event, formData) {
     }
 }
 
-async function doFlashcards(formData) {
-    const settings = {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'Accept': 'application/json',
-        }
-    };
+async function doFlashcards(formData, filename = null) {
+
+    console.log("Generating flashcards for file:", filename);
+    console.log("FormData:", formData);
+
     try {
-        // const response = await fetch('http://127.0.0.1:5000/tabot/upload_pdf', settings);
-        const response = await fetch('http://127.0.0.1:5000/tabot/pdftest', settings);
+
+        settings = {
+            headers: {'Accept': 'application/json' },
+        };
+
+        if (formData == null) {
+            // File already exists, just send the filename
+            settings.filename = filename;
+            settings.method = 'GET';
+            url = 'http://127.0.0.1:5000/tabot/flashcards?userId=' + window.username + '&filename=' + encodeURIComponent(filename);
+        }
+        else{
+            // New file upload
+            settings.body = formData;
+            settings.method = 'POST';
+            formData.append('userId', window.username);
+            
+            // settings.form = {userId: window.username, 'filename': filename};
+            url = 'http://127.0.0.1:5000/tabot/flashcards'
+            
+        }
+
+        console.log(settings);
+        const response = await fetch(url, settings);
         flashcards.length = 0;
         console.log('Purged flashcards');
         const newCards = await response.json();
@@ -558,16 +601,16 @@ async function doQuiz(formData){
     };
     try {
         // const response = await fetch('http://127.0.0.1:5000/tabot/upload_pdf', settings);
-        // const response = await fetch('http://127.0.0.1:5000/tabot/testmaker', settings);
+        const response = await fetch('http://127.0.0.1:5000/tabot/testmaker', settings);
 
-        // window.newQuiz = await response.json();
+        window.newQuiz = await response.json();
 
-        // console.log(newQuiz);
+        console.log(newQuiz);
 
-        // var questions = newQuiz['quiz'];
+        var questions = newQuiz['quiz'];
 
-        var questions = [{"type": "multiple_choice", "question": "During which era did dinosaurs roam the Earth?", "options": ["Cenozoic Era", "Mesozoic Era", "Paleozoic Era", "Cambrian Era"], "answer": "Mesozoic Era", "id": "mc_1"}, {"type": "multiple_choice", "question": "Which of the following is a herbivorous dinosaur?", "options": ["Tyrannosaurus rex", "Velociraptor", "Triceratops", "Allosaurus"], "answer": "Triceratops", "id": "mc_2"}, {"type": "multiple_choice", "question": "What is one of the main tools scientists use to study dinosaurs?", "options": ["Satellites", "Fossils", "Weather balloons", "Radiation meters"], "answer": "Fossils", "id": "mc_3"}, {"type": "short_answer", "question": "What major event is believed to have caused the extinction of most dinosaurs?", "answer": "A massive asteroid impact combined with volcanic activity and climate change.", "id": "sa_1"}, {"type": "short_answer", "question": "What years mark the start and end of the Mesozoic Era?", "answer": "About 252 to 66 million years ago.", "id": "sa_2"}, 
-        {"type": "match", "question": "Match the dinosaur to its diet.", "pairs": [{"Triceratops": "Herbivore"}, {"Brachiosaurus": "Herbivore"}, {"Tyrannosaurus rex": "Carnivore"}, {"Velociraptor": "Carnivore"}], "id": "m_1"}];
+        // var questions = [{"type": "multiple_choice", "question": "During which era did dinosaurs roam the Earth?", "options": ["Cenozoic Era", "Mesozoic Era", "Paleozoic Era", "Cambrian Era"], "answer": "Mesozoic Era", "id": "mc_1"}, {"type": "multiple_choice", "question": "Which of the following is a herbivorous dinosaur?", "options": ["Tyrannosaurus rex", "Velociraptor", "Triceratops", "Allosaurus"], "answer": "Triceratops", "id": "mc_2"}, {"type": "multiple_choice", "question": "What is one of the main tools scientists use to study dinosaurs?", "options": ["Satellites", "Fossils", "Weather balloons", "Radiation meters"], "answer": "Fossils", "id": "mc_3"}, {"type": "short_answer", "question": "What major event is believed to have caused the extinction of most dinosaurs?", "answer": "A massive asteroid impact combined with volcanic activity and climate change.", "id": "sa_1"}, {"type": "short_answer", "question": "What years mark the start and end of the Mesozoic Era?", "answer": "About 252 to 66 million years ago.", "id": "sa_2"}, 
+        // {"type": "match", "question": "Match the dinosaur to its diet.", "pairs": [{"Triceratops": "Herbivore"}, {"Brachiosaurus": "Herbivore"}, {"Tyrannosaurus rex": "Carnivore"}, {"Velociraptor": "Carnivore"}], "id": "m_1"}];
         
         
         for (let i = 0; i < questions.length; i++) {
