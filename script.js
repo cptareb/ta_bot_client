@@ -5,6 +5,7 @@ document.querySelectorAll("form").forEach(form => {
 
 // Global variable to store the conversation history
 let context;
+let deleteMode;
 try {
     context = JSON.parse(getCookie("context") || "[]");
     if (!Array.isArray(context)) context = [];
@@ -371,7 +372,7 @@ function submitUsername(){
 
 
 function initialize(username, existing=false){
-
+    window.deleteMode = false;
     document.getElementById('welcomePopup').setAttribute("visibility", "hidden");
     document.getElementById('welcomePopup').style.display = 'none';
     console.log("is initialized?");
@@ -526,9 +527,37 @@ function addDocToSidebar(filename, formData= null) {
     //What the sidebar documents do when clicked
 }
 
+function removeDocFromSidebar(filename) {
+    const documentList = document.getElementById('documentList');
+    const items = documentList.getElementsByClassName('document-item');
+    for (let i = 0; i < items.length; i++) {
+        if (items[i].textContent === filename) {
+            documentList.removeChild(items[i]);
+            // Delete logic goes HERE!
+            const settings = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ filename:filename, username:username })
+            };
+            fetch ('http://127.0.0.1:5000/tabot/deletepdf', settings);
+            break;
+        }
+    }
+}
+
+function toggleDeleteMode(is_enabled){
+    deleteMode = is_enabled;
+}
+
 async function onDocumentClick(event, formData) {
     const filename = event.target.textContent;
     console.log("Document clicked:", filename);
+    if (deleteMode) {
+        removeDocFromSidebar(filename);
+        return;
+    }
     if (document.getElementById('chatTab').classList.contains('selected-tab')){
         document.getElementById('userInput').value = `Read ${filename}`;
     }
