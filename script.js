@@ -333,8 +333,11 @@ function setPhoto() {
 }
 
 function submitUsername(){
+
     const newUsername = document.getElementById('usernameInput').value.trim();
     const existingUsername = document.getElementById('existingUserInput').value.trim();
+
+    
 
     let username = existingUsername || newUsername;
     let existing = existingUsername !== '';
@@ -342,19 +345,29 @@ function submitUsername(){
          alert('Please enter a valid username.');
          return;
     }
-    // setCookie("username", username, 1);
-    // document.getElementById('usernameForm').style.display = 'none';
-    // document.getElementById('chatContainer').style.display = 'block';
-    // initialize();
+        window.username = username; // Store username globally for later use
+    
+    fetch('http://127.0.0.1:5000/tabot/initializeuser', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username: username})
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.error) {
+            alert('Server error:' + data.error);
+            return;
+        }
+        initialize(username, existing);
+    })
+    .catch(error => {
+        console.error('Error initializing user:', error);
+    });
 
-    // hide welcome popup
-    initialize(username, existing);
 
-    window.username = username; // Store username globally for later use
 }
-
-// Remove later
-// initialize("Greyson", true);
 
 
 function initialize(username, existing=false){
@@ -554,7 +567,7 @@ async function doFlashcards(formData, filename = null) {
             settings.body = formData;
             settings.method = 'POST';
             formData.append('userId', window.username);
-            
+
             // settings.form = {userId: window.username, 'filename': filename};
             url = 'http://127.0.0.1:5000/tabot/flashcards'
             
