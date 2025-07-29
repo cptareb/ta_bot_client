@@ -347,7 +347,7 @@ function submitUsername(){
          return;
     }
         window.username = username; // Store username globally for later use
-    
+    document.getElementById('loadingScreen').style.display = 'block';
     fetch('http://127.0.0.1:5000/tabot/initializeuser', {
         method: 'POST',
         headers: {
@@ -373,6 +373,7 @@ function submitUsername(){
 
 function initialize(username, existing=false){
     window.deleteMode = false;
+    document.getElementById('loadingScreen').style.display = 'none';
     document.getElementById('welcomePopup').setAttribute("visibility", "hidden");
     document.getElementById('welcomePopup').style.display = 'none';
     console.log("is initialized?");
@@ -420,7 +421,25 @@ function initialize(username, existing=false){
     // switch to practice mode by default
     // switchTabs('practice');
     // doQuiz(null);
-
+    emojis = {
+        1: "🐾",
+        2: "😺",
+        3: "📚",
+        4: "💡",
+        5: "💀"
+    }
+    $( function() {
+        $( "#slider" ).slider({
+            value: 3,
+            min: 1,
+            max: 5,
+            step: 1,
+            slide: function( event, ui ) {
+                $( "#amount" ).text( emojis[ui.value] );
+            }
+        });
+        $( "#amount" ).text(emojis[$( "#slider" ).slider( "value" )]);
+  } );
 }
 
 function fetchUserDocumentsList(username) {
@@ -549,6 +568,9 @@ function removeDocFromSidebar(filename) {
 
 function toggleDeleteMode(is_enabled){
     deleteMode = is_enabled;
+    var color = is_enabled ? "red" : "rgb(53, 53, 53)";
+
+    document.getElementById('sidebar').setAttribute("style", "background-color: " + color + ";");
 }
 
 async function onDocumentClick(event, formData) {
@@ -570,7 +592,7 @@ async function onDocumentClick(event, formData) {
     else if (document.getElementById('practiceTab').classList.contains('selected-tab')) {
         // Practice mode logic here
         console.log("Practice mode selected");
-        doQuiz(formData);
+        doQuiz(formData, filename);
     }
 }
 
@@ -631,19 +653,34 @@ async function doFlashcards(formData, filename = null) {
 
 var userQuizResponse = [];
 
-async function doQuiz(formData){
+async function doQuiz(formData, filename = null) {
+    document.getElementById('loadingScreen').style.display = 'block';
     document.getElementById("practiceContent").innerHTML = "";
     userQuizResponse = [];
     const settings = {
-        method: 'POST',
-        body: formData,
         headers: {
             'Accept': 'application/json',
         }
     };
+
+    console.log("Generating quiz for file:", filename);
+    console.log(formData);
+
+    if (formData == null) {
+        // File already exists, just send the filename
+        settings.filename = filename;
+        settings.method = 'GET';
+        url = 'http://127.0.0.1:5000/tabot/testmaker?userId=' + window.username + '&filename=' + encodeURIComponent(filename);
+    }
+    else {
+        // New file upload
+        settings.body = formData;
+        settings.method = 'POST';
+        formData.append('userId', window.username);
+        url = 'http://127.0.0.1:5000/tabot/testmaker';
+    }
     try {
-        // const response = await fetch('http://127.0.0.1:5000/tabot/upload_pdf', settings);
-        const response = await fetch('http://127.0.0.1:5000/tabot/testmaker', settings);
+        const response = await fetch(url, settings);
 
         window.newQuiz = await response.json();
 
@@ -781,6 +818,9 @@ async function doQuiz(formData){
     } catch (err) {
         console.error(err);
         alert("Something went wrong generating quiz");
+    }
+    finally {
+        document.getElementById('loadingScreen').style.display = 'none';
     }
 }
 

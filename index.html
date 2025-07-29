@@ -34,7 +34,10 @@
 	  </svg>
 </head>
 <body>
-
+  <div id="loadingScreen">
+    <div class="loader"></div>
+    <h1>Loading...</h1>
+  </div>
   <div id="popupContainer">
     <div id="welcomePopup">
       <h1>Welcome to the Teaching Assistant App!</h1>
@@ -65,6 +68,12 @@
         <div id="deleteModeContainer" style="display: block;">
           <button id="DeleteBtn" onclick="toggleDeleteMode(true)">Delete Mode</button>
           <button id="cancelDeleteBtn" onclick="toggleDeleteMode(false)">Cancel</button>
+          <p>
+            <label for="amount">Difficulty Level:</label>
+            <span id="amount" style="border:0; color:#f6931f; font-weight:bold;"></span>
+          </p>
+ 
+          <div id="slider"></div>
         </div>
 
     </div>
