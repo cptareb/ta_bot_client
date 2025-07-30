@@ -347,7 +347,7 @@ function submitUsername(){
          return;
     }
         window.username = username; // Store username globally for later use
-    document.getElementById('loadingScreen').style.display = 'block';
+    document.getElementById('loadingScreen').style.display = 'flex';
     fetch('http://127.0.0.1:5000/tabot/initializeuser', {
         method: 'POST',
         headers: {
@@ -654,7 +654,7 @@ async function doFlashcards(formData, filename = null) {
 var userQuizResponse = [];
 
 async function doQuiz(formData, filename = null) {
-    document.getElementById('loadingScreen').style.display = 'block';
+    document.getElementById('loadingScreen').style.display = 'flex';
     document.getElementById("practiceContent").innerHTML = "";
     userQuizResponse = [];
     const settings = {
@@ -731,6 +731,11 @@ async function doQuiz(formData, filename = null) {
                 div.appendChild(textarea);
                 document.getElementById("practiceContent").appendChild(div);
             }
+
+
+
+
+            // Match section (WIP)
             else if (questions[i].type === "match") {
 
                 var div = document.createElement("div");
@@ -740,9 +745,13 @@ async function doQuiz(formData, filename = null) {
 
                 col1 = [];
                 col2 = [];
+                // console.log("[DEBUG]Pairs:", questions[i].pairs);
                 for (const [term, definition] of Object.entries(questions[i].pairs)) {
-                    col1val = Object.keys(definition)[0]
-                    col2val = definition[col1val];
+                    console.log("Term:", term, "Definition:", definition);
+                    // Create a new pair
+                    var col1val, col2val;
+                    col1val = definition[0];
+                    col2val = definition[1];
                     col1.push(col1val);
                     col2.push(col2val);
                 }
@@ -757,9 +766,9 @@ async function doQuiz(formData, filename = null) {
                 var td2 = document.createElement("td");
 
                 col1_list = document.createElement("ul");
-                col1_list.setAttribute("class", "match-"+i+"-col1");
+                col1_list.setAttribute("class", "match-col1");
                 col2_list = document.createElement("ul");
-                col2_list.setAttribute("class", "match-"+i+"-col2");
+                col2_list.setAttribute("class", "match-col2");
                 col2_list.setAttribute("id", "sortable");
 
                 
@@ -876,15 +885,15 @@ async function submitAnswers(){
         result["question"] = q; // Add question to result
         result["pairs"] = [];
 
-        console.log("match-"+(numberOfQuestions-i-1)+"-col1");
-        console.log(document.getElementById("match-"+(numberOfQuestions-i-1)+"-col1"))
+        // console.log("match-"+(numberOfQuestions-i-1)+"-col1");
+        // console.log(document.getElementById("match-"+(numberOfQuestions-i-1)+"-col1"))
 
-        console.log("match-"+(numberOfQuestions-i-1)+"-col2");
-        console.log(document.getElementById("match-"+(numberOfQuestions-i-1)+"-col2"))
+        // console.log("match-"+(numberOfQuestions-i-1)+"-col2");
+        // console.log(document.getElementById("match-"+(numberOfQuestions-i-1)+"-col2"))
 
         //This whole thing needs another look-through !!!!
-        var col1 = document.getElementsByClassName("match-"+(numberOfQuestions-i-3)+"-col1")[0].getElementsByTagName("li");
-        var col2 = document.getElementsByClassName("match-"+(numberOfQuestions-i-3)+"-col2")[0].getElementsByTagName("li");
+        var col1 = document.getElementsByClassName("match-col1")[0].getElementsByTagName("li");
+        var col2 = document.getElementsByClassName("match-col2")[0].getElementsByTagName("li");
         for (let j = 0; j < col1.length; j++) {
             var key = col1[j].innerText.trim(); // Get term text
             var value = col2[j].innerText.trim(); // Get definition text
