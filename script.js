@@ -704,10 +704,11 @@ async function doQuiz(formData, filename = null) {
                 var options = questions[i].options;
                 var id = questions[i].id;
                 for (const [key, value] of Object.entries(options)) {
+                    console.log("[DEBUG] Key:", key, "Value:", value);
                     var button = document.createElement("button");
                     button.setAttribute("class", "mcq-option "+id);
                     button.setAttribute("id", `mcq-${id}-${key}`);
-                    button.setAttribute("question", value);
+                    button.setAttribute("question", questions[i].question);
                     button.innerHTML = parseInt(key)+1 + ". " + value;
                     button.onclick = onMCQClick;
                     div.appendChild(button);
@@ -913,8 +914,10 @@ async function submitAnswers(){
         var id = button.getAttribute("id").split("-")[1]; // Get question id from button id
         var key = button.getAttribute("id").split("-")[2]; // Get option key from button id
         var answer = button.innerText.split(". ")[1]; // Get answer text from button innerText. Not "correct" answer per se
-        var question = button.getAttribute("question"); // Get expected answer from button attribute
+        var question = button.getAttribute("question"); // Get expected answer from button attribute (!!!)
         mcqs.push({id: id, answer: answer, key: key, question:question}); // Add to mcqs array
+        console.log("[DEBUG] MCQ selected:", id, key, answer, question);
+        console.log("[DEBUG] MCQ array:", mcqs);
     }
     );
     console.log("MCQs:", mcqs);
@@ -1008,21 +1011,22 @@ window.showFlashcard = function(index){
 
 
 function selectMCQ(response) {
-    // console.log('curr quiz:', newQuiz);
-    let id = response[0];
-    let option = response[1];
-    console.log('option', option);
-    console.log('id', id);
+    // // console.log('curr quiz:', newQuiz);
+    // let id = response[0];
+    // let option = response[1];
+    // console.log('option', option);
+    // console.log('id', id);
 
-    //if question unanswered, add it
-    if (!userQuizResponse.some(r => r.id === id)) {
-        userQuizResponse.push({type: "multiple choice", response: option, id: id});
-    }
-    //if question already answered, replace it
-    else{
-    userQuizResponse.push({type: "multiple choice", response: option, id: id});
-    }
-    console.log('userQuizResponse:', userQuizResponse);
+    // //if question unanswered, add it
+    // if (!userQuizResponse.some(r => r.id === id)) {
+    //     userQuizResponse.push({type: "multiple choice", response: option, id: id});
+    // }
+    // //if question already answered, replace it
+    // else{
+    //     userQuizResponse = userQuizResponse.filter(r => r.id !== id);
+    //     userQuizResponse.push({type: "multiple choice", response: option, id: id});
+    // }
+    // console.log('userQuizResponse:', userQuizResponse);
 
 }
 
