@@ -845,7 +845,7 @@ async function submitAnswers(){
 
     var gradeText = document.createElement("p");
     gradeText.setAttribute("id", "gradeText");
-    gradeText.innerHTML = "Click the button above to submit your answers and see your gradee";
+    gradeText.innerHTML = "Click the button above to submit your answers and see your grade";
 
     var gradeNumber = document.createElement("p");
     gradeNumber.setAttribute("id", "gradeNumber");
@@ -920,7 +920,22 @@ async function submitAnswers(){
         console.log("[DEBUG] MCQ array:", mcqs);
     }
     );
+    var cnt = 0;
+    for (let i=0; i < newQuiz['quiz'].length; i++) {
+        if (newQuiz['quiz'][i].type === "multiple_choice") {
+            cnt += 1;
+            }
+        }
+    console.log("Expected MCQ count:", cnt);
+    if (mcqs.length < cnt) {
+        console.warn("Not all MCQs were answered. Please answer all questions before submitting.");
+        alert("Please answer all questions before submitting.");
+        return;
+    }
     console.log("MCQs:", mcqs);
+    console.log("MCQ Count:", mcqs.length);
+    console.log("[DEBUG] Quiz: ", newQuiz);
+    console.log("Ideal Count:", mcqButtons.length);
     var actualGrade = await computeGrade(mcqs, frqs, matches);
     
     // Animate ... for anticipation
