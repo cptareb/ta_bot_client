@@ -6,6 +6,8 @@ document.querySelectorAll("form").forEach(form => {
 // Global variable to store the conversation history
 let context;
 let deleteMode;
+let sliderValue = 3;
+
 try {
     context = JSON.parse(getCookie("context") || "[]");
     if (!Array.isArray(context)) context = [];
@@ -157,9 +159,9 @@ async function sendMessage(feedbackAdded = false) {
        }
 
 
-       if (data.message["urls"] && data.message["urls"].length > 0) {
-           await displayUrls(data.message["urls"]);
-       }
+    //    if (data.message["urls"] && data.message["urls"].length > 0) {
+    //        await displayUrls(data.message["urls"]);
+    //    }
 
 
    } catch (error) {
@@ -372,6 +374,7 @@ function submitUsername(){
 
 
 function initialize(username, existing=false){
+    console.log('Current diff level:', sliderValue);
     window.deleteMode = false;
     document.getElementById('loadingScreen').style.display = 'none';
     document.getElementById('welcomePopup').setAttribute("visibility", "hidden");
@@ -434,11 +437,14 @@ function initialize(username, existing=false){
             min: 1,
             max: 5,
             step: 1,
+            orientation: "horizontal",
             slide: function( event, ui ) {
                 $( "#amount" ).text( emojis[ui.value] );
+                sliderValue = ui.value;
             }
         });
         $( "#amount" ).text(emojis[$( "#slider" ).slider( "value" )]);
+        
   } );
 }
 
@@ -582,6 +588,9 @@ async function onDocumentClick(event, formData) {
     }
     if (document.getElementById('chatTab').classList.contains('selected-tab')){
         document.getElementById('userInput').value = `Read ${filename}`;
+        // Put chat logic here
+        //pdfRAG
+        pdfRAG(filename);
     }
     else if (document.getElementById('learnTab').classList.contains('selected-tab')){
         //flashcard generation logic MOVE HERE (done)
@@ -653,6 +662,35 @@ async function doFlashcards(formData, filename = null) {
 
 var userQuizResponse = [];
 
+async function pdfRAG(filename) {
+    const url = `http://127.0.0.1:5000/tabot/chatPDF`;
+
+    const settings = {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+            userId: window.username,
+            filename: filename, 
+        }),
+    };
+
+    try {
+        const response = await fetch(url, settings);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const result = await response.json();
+        console.log("PDF RAG response:", result);
+        return result;
+    } catch (error) {
+        console.error("Error in PDF RAG:", error);
+    }
+}
+
+
 async function doQuiz(formData, filename = null) {
     document.getElementById('loadingScreen').style.display = 'flex';
     document.getElementById("practiceContent").innerHTML = "";
@@ -670,14 +708,14 @@ async function doQuiz(formData, filename = null) {
         // File already exists, just send the filename
         settings.filename = filename;
         settings.method = 'GET';
-        url = 'http://127.0.0.1:5000/tabot/testmaker?userId=' + window.username + '&filename=' + encodeURIComponent(filename);
+        url = 'http://127.0.0.1:5000/tabot/testmaker?diff=' + sliderValue + '&userId=' + window.username + '&filename=' + encodeURIComponent(filename);
     }
     else {
         // New file upload
         settings.body = formData;
         settings.method = 'POST';
         formData.append('userId', window.username);
-        url = 'http://127.0.0.1:5000/tabot/testmaker';
+        url = 'http://127.0.0.1:5000/tabot/testmaker?diff=' + sliderValue;
     }
     try {
         const response = await fetch(url, settings);
@@ -687,6 +725,19 @@ async function doQuiz(formData, filename = null) {
         console.log(newQuiz);
 
         var questions = newQuiz['quiz'];
+        
+        //Safeguard against incorrect type labels from LLM
+        for (let i = 0; i < questions.length; i++) {
+            if (questions[i].options) {
+                questions[i].type = "multiple_choice";
+            }
+            else if (questions[i].pairs) {
+                questions[i].type = "matches";
+            }
+            else{
+                questions[i].type = "short_answer";
+            }
+        }
 
         // var questions = [{"type": "multiple_choice", "question": "During which era did dinosaurs roam the Earth?", "options": ["Cenozoic Era", "Mesozoic Era", "Paleozoic Era", "Cambrian Era"], "answer": "Mesozoic Era", "id": "mc_1"}, {"type": "multiple_choice", "question": "Which of the following is a herbivorous dinosaur?", "options": ["Tyrannosaurus rex", "Velociraptor", "Triceratops", "Allosaurus"], "answer": "Triceratops", "id": "mc_2"}, {"type": "multiple_choice", "question": "What is one of the main tools scientists use to study dinosaurs?", "options": ["Satellites", "Fossils", "Weather balloons", "Radiation meters"], "answer": "Fossils", "id": "mc_3"}, {"type": "short_answer", "question": "What major event is believed to have caused the extinction of most dinosaurs?", "answer": "A massive asteroid impact combined with volcanic activity and climate change.", "id": "sa_1"}, {"type": "short_answer", "question": "What years mark the start and end of the Mesozoic Era?", "answer": "About 252 to 66 million years ago.", "id": "sa_2"}, 
         // {"type": "match", "question": "Match the dinosaur to its diet.", "pairs": [{"Triceratops": "Herbivore"}, {"Brachiosaurus": "Herbivore"}, {"Tyrannosaurus rex": "Carnivore"}, {"Velociraptor": "Carnivore"}], "id": "m_1"}];
