@@ -590,7 +590,7 @@ async function onDocumentClick(event, formData) {
         document.getElementById('userInput').value = `Read ${filename}`;
         // Put chat logic here
         //pdfRAG
-        pdfRAG(filename);
+        pdfRAG(formData, filename);
     }
     else if (document.getElementById('learnTab').classList.contains('selected-tab')){
         //flashcard generation logic MOVE HERE (done)
@@ -662,34 +662,40 @@ async function doFlashcards(formData, filename = null) {
 
 var userQuizResponse = [];
 
-async function pdfRAG(filename) {
-    const url = `http://127.0.0.1:5000/tabot/chatPDF`;
-
-    const settings = {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-        },
-        body: JSON.stringify({
-            userId: window.username,
-            filename: filename, 
-        }),
-    };
-
+async function pdfRAG(formData, filename=null) {
+    console.log("[DEBUG] Trying to add PDF to sidebar:", filename);
+    console.log("[DEBUG] FormData:", formData);
     try {
+
+        settings = {
+            headers: {'Accept': 'application/json' },
+        };
+
+        if (formData == null) {
+            // File already exists, just send the filename
+            settings.filename = filename;
+            settings.method = 'GET';
+            url = 'http://127.0.0.1:5000/tabot/chatPDF?userId=' + window.username + '&filename=' + encodeURIComponent(filename);
+        }
+        else{
+            // New file upload
+            settings.body = formData;
+            settings.method = 'POST';
+            formData.append('userId', window.username);
+
+            // settings.form = {userId: window.username, 'filename': filename};
+            url = 'http://127.0.0.1:5000/tabot/chatPDF'
+        }
         const response = await fetch(url, settings);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const result = await response.json();
         console.log("PDF RAG response:", result);
-        return result;
+        return result;      
     } catch (error) {
-        console.error("Error in PDF RAG:", error);
-    }
-}
-
+        console.error("Unexpected error in PDF RAG:", error);
+    }}
 
 async function doQuiz(formData, filename = null) {
     document.getElementById('loadingScreen').style.display = 'flex';
@@ -755,7 +761,7 @@ async function doQuiz(formData, filename = null) {
                 var options = questions[i].options;
                 var id = questions[i].id;
                 for (const [key, value] of Object.entries(options)) {
-                    console.log("[DEBUG] Key:", key, "Value:", value);
+                    // console.log("[DEBUG] Key:", key, "Value:", value);
                     var button = document.createElement("button");
                     button.setAttribute("class", "mcq-option "+id);
                     button.setAttribute("id", `mcq-${id}-${key}`);
@@ -788,7 +794,7 @@ async function doQuiz(formData, filename = null) {
 
 
             // Match section (WIP)
-            else if (questions[i].type === "match") {
+            else if (questions[i].type === "match" || questions[i].type === "matches") {
 
                 var div = document.createElement("div");
                 div.setAttribute("class", "match-question");
@@ -1030,8 +1036,8 @@ function onMCQClick(event) {
     var key = id.split("-")[2]; // Extract the key from the id
     id = id.split("-")[1]; // Extract the id from the id
     
-    console.log(id);
-    console.log(key);
+    // console.log(id);
+    // console.log(key);
 
     selectMCQ([id, key]);
     var buttons = document.querySelectorAll('.'+id);
