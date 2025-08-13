@@ -606,7 +606,7 @@ async function onDocumentClick(event, formData) {
 }
 
 async function doFlashcards(formData, filename = null) {
-
+    document.getElementById('loadingScreen').style.display = 'flex';
     console.log("Generating flashcards for file:", filename);
     console.log("FormData:", formData);
 
@@ -657,6 +657,9 @@ async function doFlashcards(formData, filename = null) {
     } catch (err) {
         console.error(err);
         alert("Something went wrong generating flashcards");
+    }
+    finally {
+        document.getElementById('loadingScreen').style.display = 'none';
     }
 }
 
@@ -744,9 +747,6 @@ async function doQuiz(formData, filename = null) {
                 questions[i].type = "short_answer";
             }
         }
-
-        // var questions = [{"type": "multiple_choice", "question": "During which era did dinosaurs roam the Earth?", "options": ["Cenozoic Era", "Mesozoic Era", "Paleozoic Era", "Cambrian Era"], "answer": "Mesozoic Era", "id": "mc_1"}, {"type": "multiple_choice", "question": "Which of the following is a herbivorous dinosaur?", "options": ["Tyrannosaurus rex", "Velociraptor", "Triceratops", "Allosaurus"], "answer": "Triceratops", "id": "mc_2"}, {"type": "multiple_choice", "question": "What is one of the main tools scientists use to study dinosaurs?", "options": ["Satellites", "Fossils", "Weather balloons", "Radiation meters"], "answer": "Fossils", "id": "mc_3"}, {"type": "short_answer", "question": "What major event is believed to have caused the extinction of most dinosaurs?", "answer": "A massive asteroid impact combined with volcanic activity and climate change.", "id": "sa_1"}, {"type": "short_answer", "question": "What years mark the start and end of the Mesozoic Era?", "answer": "About 252 to 66 million years ago.", "id": "sa_2"}, 
-        // {"type": "match", "question": "Match the dinosaur to its diet.", "pairs": [{"Triceratops": "Herbivore"}, {"Brachiosaurus": "Herbivore"}, {"Tyrannosaurus rex": "Carnivore"}, {"Velociraptor": "Carnivore"}], "id": "m_1"}];
         
         
         for (let i = 0; i < questions.length; i++) {
@@ -803,7 +803,7 @@ async function doQuiz(formData, filename = null) {
 
                 col1 = [];
                 col2 = [];
-                // console.log("[DEBUG]Pairs:", questions[i].pairs);
+                console.log("[DEBUG]Pairs:", questions[i].pairs);
                 for (const [term, definition] of Object.entries(questions[i].pairs)) {
                     console.log("Term:", term, "Definition:", definition);
                     // Create a new pair
@@ -941,13 +941,7 @@ async function submitAnswers(){
         var q = matchQuestions[i].getElementsByTagName("p")[0].innerText; // Get match question text
 
         result["question"] = q; // Add question to result
-        result["pairs"] = [];
-
-        // console.log("match-"+(numberOfQuestions-i-1)+"-col1");
-        // console.log(document.getElementById("match-"+(numberOfQuestions-i-1)+"-col1"))
-
-        // console.log("match-"+(numberOfQuestions-i-1)+"-col2");
-        // console.log(document.getElementById("match-"+(numberOfQuestions-i-1)+"-col2"))
+        result["pairs"] = [];   
 
         //This whole thing needs another look-through !!!!
         var col1 = document.getElementsByClassName("match-col1")[0].getElementsByTagName("li");
@@ -973,8 +967,7 @@ async function submitAnswers(){
         var answer = button.innerText.split(". ")[1]; // Get answer text from button innerText. Not "correct" answer per se
         var question = button.getAttribute("question"); // Get expected answer from button attribute (!!!)
         mcqs.push({id: id, answer: answer, key: key, question:question}); // Add to mcqs array
-        console.log("[DEBUG] MCQ selected:", id, key, answer, question);
-        console.log("[DEBUG] MCQ array:", mcqs);
+// 
     }
     );
     var cnt = 0;
@@ -1048,8 +1041,6 @@ function onMCQClick(event) {
     button.classList.add("selected");
 }
 
-
-
 window.flashcards = [
   { question: "a", answer: "b" },
   { question: "c", answer: "d" }
@@ -1070,36 +1061,23 @@ window.showFlashcard = function(index){
     card.className = "flashcard";
     card.onclick = () => card.classList.toggle("flipped");
 
-    console.log('data.question:', data.question);
-    console.log('data.answer:', data.answer);
-
-    card.innerHTML = `
+    //Handling erroneous generation from LLM
+    if (!data.question || !data.answer) {
+        card.innerHTML = `
+        <div class="front">${Object.keys(data)[0]}</div>
+        <div class="back">${Object.values(data)[0]}</div>
+        `;
+    }
+    else{
+        card.innerHTML = `
         <div class="front">${data.question}</div>
         <div class="back">${data.answer}</div>
     `;
+    }
+
+    
 
     display.appendChild(card);
-}
-
-
-function selectMCQ(response) {
-    // // console.log('curr quiz:', newQuiz);
-    // let id = response[0];
-    // let option = response[1];
-    // console.log('option', option);
-    // console.log('id', id);
-
-    // //if question unanswered, add it
-    // if (!userQuizResponse.some(r => r.id === id)) {
-    //     userQuizResponse.push({type: "multiple choice", response: option, id: id});
-    // }
-    // //if question already answered, replace it
-    // else{
-    //     userQuizResponse = userQuizResponse.filter(r => r.id !== id);
-    //     userQuizResponse.push({type: "multiple choice", response: option, id: id});
-    // }
-    // console.log('userQuizResponse:', userQuizResponse);
-
 }
 
 function nextCard() {
@@ -1120,16 +1098,3 @@ function previousCard() {
 document.addEventListener("DOMContentLoaded", function () {
     showFlashcard(currentCardIndex);
 });
-
-// User input example (chatGPT helped)
-// {
-//   "userAnswers": [
-//     { "type": "mcq", "response": "B" },
-//     { "type": "frq", "response": "It's how plants make food from sunlight." },
-//     { "type": "match", "response": {
-//       "Osmosis": "Movement of water across a membrane",
-//       "Mitosis": "Cell division process",
-//       "Photosynthesis": "Conversion of sunlight into energy"
-//     }}
-//   ]
-// }
