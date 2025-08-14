@@ -5,12 +5,14 @@
   <!-- <link rel="stylesheet" href="/resources/demos/style.css"> -->
   <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
   <script src="https://code.jquery.com/ui/1.14.1/jquery-ui.js" defer></script>
-	<link rel="preconnect" href="https://fonts.googleapis.com">
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link href="https://fonts.googleapis.com/css2?family=Matemasie&display=swap" rel="stylesheet">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<!-- Import CSS file -->
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap" rel="stylesheet">
+  <!-- Import CSS file -->
+	<link rel="stylesheet" href="reset.css">
 	<link rel="stylesheet" href="styles.css">
 	<!-- Import JavaScript file -->
 	<script src="script.js" defer></script>
@@ -38,36 +40,53 @@
     <div class="loader"></div>
     <h1>Loading...</h1>
   </div>
-  <div id="popupContainer">
+  <div id="popupBackground">
     <div id="welcomePopup">
       <h1>Welcome to the Teaching Assistant App!</h1>
-      <h2>New User? Enter Username:</h2>
-      <input type="text" id="usernameInput" placeholder="Enter your new username here..."><br/>
-      
-      <h2>Existing User?</h2>
-      <input type="text" id="existingUserInput" placeholder="Enter your existing username here...">
-      <br/><br/>
-      <button id="submitUsernameBtn" onclick="submitUsername()">Submit</button>
+      <div class="formField">
+        <label href="usernameInput">New User? Enter Username:</label>
+        <input type="text" name="usernameInput" id="usernameInput" placeholder="Enter your new username here...">
+      </div>
+      <div class="formField">
+        <label href="existingUserInput">Existing User?</label>
+        <input type="text" name="existingUserInput" id="existingUserInput" placeholder="Enter your existing username here...">
+      </div>
+      <div class="formField">
+        <button id="submitUsernameBtn" class="button" onclick="submitUsername()">Submit</button>
+      </div>
     </div>
     <div id="uploadPopup">
-      <button id="closePopupBtn" onclick="hideUploadPopup()">X</button>
+      <button id="closePopupBtn" class="button" onclick="hideUploadPopup()">
+        <div>
+          &times;
+        </div>
+      </button>
       <h1>Upload PDF</h1>
-      <input type="file" id="pdfInput" accept=".pdf">
-      <button id="uploadDocBtn" onclick="onUploadDocument()">Upload</button>
+      <div class="formField">
+        <label for="pdfInput">File</label>
+        <input type="file" name="pdfInput" id="pdfInput" accept=".pdf">
+      </div>
+      <div class="formField">
+        <button id="uploadDocBtn" class="button" onclick="onUploadDocument()">Submit</button>
+      </div>
     </div>
-  </div>  
+  </div>
   <div id="grid-container">
     <div id="sidebar">
-      <span style="font-size: large;">Documents</span>
-      <button id="uploadBtn" class="sidebar-button" onclick="showUploadPopup();">+</button>
+      <div class="tabs-container">
+        <button class="tab selected-tab">
+          Documents
+        </button>
+      </div>
+      <button id="uploadBtn" class="button sidebar-button" onclick="showUploadPopup();">+</button>
       
       <div id="sidebar-content">
         <ul id="documentList">
           <!-- Document list will be populated here -->
         </ul>
         <div id="deleteModeContainer" style="display: block;">
-          <button id="DeleteBtn" onclick="toggleDeleteMode(true)">Delete Mode</button>
-          <button id="cancelDeleteBtn" onclick="toggleDeleteMode(false)">Cancel</button>
+          <button id="DeleteBtn" class="button buttonDanger" onclick="toggleDeleteMode(true)">Delete Mode</button>
+          <button id="cancelDeleteBtn" class="button buttonSecondary" onclick="toggleDeleteMode(false)">Cancel</button>
           <p>
             <label for="amount">Difficulty Level:</label>
             <span id="amount" style="border:0; color:#f6931f; font-weight:bold;"></span>
@@ -78,38 +97,49 @@
 
     </div>
   </div>
-	
-    <div id="chatContainer">
-      <div id="chatTabs">
-        <button id="chatTab"  class="tab selected-tab" onclick="switchTabs('chat')">Chat</button>
-        <button id="learnTab" class="tab" onclick="switchTabs('learn')">Learn</button>
-        <button id="practiceTab" class="tab" onclick="switchTabs('practice')">Practice</button>
-
-      </div>
-      <div id="chatMode">
-        <div id="chatbox">
-          <img align="left" id="mister" src="mister/1.jpg"/>
-          <img align="right" id="paladin" src="paladin.png"/>
-        </div>
-            
-        <div style="display: flex; margin-top: 10px;">
-              <input type="text" id="userInput" placeholder="Type your prompts here....">
-              <button id="sendBtn" type="button" onclick="sendMessage()">Send</button>
-          <button id="eraseBtn" onclick="eraseMemory()">Erase Memory</button>
-          </div>
-        
-          <div id="sendingStatus" class="sending-message" style="display: none;">Sending...</div>
-        <ul id="urlsList"></ul>
+  <div id="chatContainer">
+    <div id="chatTabs" class="tabs-container">
+      <button id="chatTab"  class="tab selected-tab" onclick="switchTabs('chat')">Chat</button>
+      <button id="learnTab" class="tab" onclick="switchTabs('learn')">Learn</button>
+      <button id="practiceTab" class="tab" onclick="switchTabs('practice')">Practice</button>
     </div>
+    <div id="chatMode">
+      <div id="chatbox">
+        <div id="misterContainer">
+          <figure id="mister">
+            <img src="mister/1.jpg" alt="Mister's Avatar" />
+          </figure>
+        </div>
+        <div id="paladinContainer">
+          <figure id="paladin">
+            <img src="paladin.png" alt="Paladin's Avatar" />
+          </figure>
+        </div>
+      </div>
+          
+      <div id="chatBody">
+        <div id="sendingStatus" class="sending-message">Sending...</div>
+        <div id="chatInput">
+          <input type="text" id="userInput" placeholder="Type something...">
+          <button id="sendBtn" class="button" type="button" onclick="sendMessage()">Send</button>
+        </div>
+      </div>
+
+      <footer id="chatFooter">
+        <p>Disclaimer: This is an experimental version. AI's answers may be inaccurate</p>
+        <p>TA Bot Client &copy; 2025</p>
+      </footer>
+      <!-- <button id="eraseBtn" class="buttonDanger" onclick="eraseMemory()">Erase Memory</button> -->
+      
+      <ul id="urlsList"></ul>
+  </div>
     <div id="learnMode">
       <!-- Upload PDF -->
-       <h2>Learn Mode</h2>
-       
        <div id="flashcardContainer">
         <div id="flashcardDisplay"></div>
         <div id="cardControls">
-            <button onclick="previousCard()">Previous</button>
-            <button onclick="nextCard()">Next</button>
+            <button class="button" onclick="previousCard()">Previous</button>
+            <button class="button" onclick="nextCard()">Next</button>
         </div>
     </div>
     </div>
