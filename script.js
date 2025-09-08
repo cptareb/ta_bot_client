@@ -374,12 +374,10 @@ function submitUsername(){
 
 
 function initialize(username, existing=false){
-    console.log('Current diff level:', sliderValue);
     window.deleteMode = false;
     document.getElementById('loadingScreen').style.display = 'none';
     document.getElementById('welcomePopup').setAttribute("visibility", "hidden");
     document.getElementById('welcomePopup').style.display = 'none';
-    console.log("is initialized?");
 
 
    $("a.query").click(function() {
@@ -397,21 +395,15 @@ function initialize(username, existing=false){
    });
 
    setPhoto();
-   let openingMessageNew = "hallo "+username+" 🐾 I am Mister Cat GPTA.\n\nI am the TA for this course. \
-   I can answer questions such as \n\n \
-   'What is the deadline for the assignment?' or \n \
-   'What is the grading policy?' or \n \
-   'How can I make a scatter plot?'  \n \n \
-   I can also provide you with links to resources. \
-                       How can I help today?"
+   let openingMessageNew = "hallo "+username+" 🐾 I am Mister Cat GPTA.\n\n\
+    I'm here to help you with your studies! \n\n \
+    Upload a PDF to get started. \n \
+    "
 
-    let openingMessageExisting = "Welcome back "+username+" 🐾 I am Mister Cat GPTA.\n\nI am the TA for this course. \
-    I can answer questions such as \n\n \
-    'What is the deadline for the assignment?' or \n \
-    'What is the grading policy?' or \n \
-    'How can I make a scatter plot?'  \n \n \
-    I can also provide you with links to resources. \
-                        How can I help today?"
+
+    let openingMessageExisting = "Welcome back "+username+" 🐾 I am Mister Cat GPTA.\n\nI'm here to help you with your studies! \n\n \
+    Upload a PDF to get started. \n \
+    "
 
     let openingMessage = existing ? openingMessageExisting : openingMessageNew;
     displayMessageOutput(openingMessage, 'bot', true);
@@ -421,9 +413,6 @@ function initialize(username, existing=false){
         fetchUserDocumentsList(username);
     }
 
-    // switch to practice mode by default
-    // switchTabs('practice');
-    // doQuiz(null);
     emojis = {
         1: "🐾",
         2: "😺",
@@ -660,14 +649,14 @@ async function doFlashcards(formData, filename = null) {
     }
     finally {
         document.getElementById('loadingScreen').style.display = 'none';
+        cardControls.setAttribute("style", "visibility: visible;");
     }
 }
 
 var userQuizResponse = [];
 
 async function pdfRAG(formData, filename=null) {
-    console.log("[DEBUG] Trying to add PDF to sidebar:", filename);
-    console.log("[DEBUG] FormData:", formData);
+    document.getElementById('loadingScreen').style.display = 'flex';
     try {
 
         settings = {
@@ -698,8 +687,10 @@ async function pdfRAG(formData, filename=null) {
         return result;      
     } catch (error) {
         console.error("Unexpected error in PDF RAG:", error);
-    }}
-
+    }
+    finally {
+        document.getElementById('loadingScreen').style.display = 'none';}
+    }
 async function doQuiz(formData, filename = null) {
     document.getElementById('loadingScreen').style.display = 'flex';
     document.getElementById("practiceContent").innerHTML = "";
@@ -1021,6 +1012,26 @@ async function computeGrade(mcqs, frqs, matches) {
     return [data.feedback, data.grade];
 }
 
+function selectMCQ(response) {
+    // console.log('curr quiz:', newQuiz);
+    let id = response[0];
+    let option = response[1];
+    console.log('option', option);
+    console.log('id', id);
+
+    //if question unanswered, add it
+    if (!userQuizResponse.some(r => r.id === id)) {
+        userQuizResponse.push({type: "multiple choice", response: option, id: id});
+    }
+    //if question already answered, replace it
+    else{
+        userQuizResponse = userQuizResponse.filter(r => r.id !== id);
+        userQuizResponse.push({type: "multiple choice", response: option, id: id});
+    }
+    console.log('userQuizResponse:', userQuizResponse);
+
+}
+
 function onMCQClick(event) {
 
     console.log("MCQ button clicked");
@@ -1041,10 +1052,7 @@ function onMCQClick(event) {
     button.classList.add("selected");
 }
 
-window.flashcards = [
-  { question: "a", answer: "b" },
-  { question: "c", answer: "d" }
-  ];
+window.flashcards = [];
   window.currentCardIndex = 0;
 
 window.showFlashcard = function(index){
